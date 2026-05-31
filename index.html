@@ -137,10 +137,6 @@
       background-clip: text;
       animation: title-in .8s cubic-bezier(.22,1,.36,1) both;
     }
-    @keyframes title-in {
-      from { opacity: 0; transform: translateY(24px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
 
     .subtitle {
       max-width: 660px;
@@ -149,7 +145,6 @@
       font-size: 16px;
       font-weight: 300;
       line-height: 1.75;
-      animation: title-in .8s .15s cubic-bezier(.22,1,.36,1) both;
     }
 
     .stats-bar {
@@ -157,7 +152,6 @@
       justify-content: center;
       flex-wrap: wrap;
       gap: 12px;
-      animation: title-in .8s .28s cubic-bezier(.22,1,.36,1) both;
     }
     .stat-chip {
       display: flex;
@@ -170,9 +164,7 @@
       padding: 7px 16px;
       font-size: 13px;
       color: var(--muted);
-      transition: all .3s;
     }
-    .stat-chip:hover { border-color: var(--border-h); color: var(--text); }
     .stat-chip span { color: var(--text); font-weight: 600; }
 
     /* ── DIVIDER ── */
@@ -209,24 +201,12 @@
       position: relative;
       overflow: hidden;
       transition: transform .35s cubic-bezier(.22,1,.36,1), border-color .35s, box-shadow .35s;
-      animation: card-in .6s var(--cd, 0s) cubic-bezier(.22,1,.36,1) both;
-    }
-    .card:nth-child(1) { --cd: .05s; }
-    .card:nth-child(2) { --cd: .12s; }
-    .card:nth-child(3) { --cd: .19s; }
-    .card:nth-child(4) { --cd: .26s; }
-    .card:nth-child(5) { --cd: .33s; }
-    .card:nth-child(6) { --cd: .40s; }
-    .card:nth-child(7) { --cd: .47s; }
-    @keyframes card-in {
-      from { opacity: 0; transform: translateY(32px) scale(.97); }
-      to   { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .card::before {
       content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
       background: var(--c-accent, var(--accent1)); border-radius: var(--radius) var(--radius) 0 0;
-      opacity: .7; transition: opacity .3s;
+      opacity: .7;
     }
     .card::after {
       content: ''; position: absolute; inset: 0; border-radius: var(--radius);
@@ -235,7 +215,6 @@
     }
     .card:hover { transform: translateY(-7px) scale(1.01); border-color: var(--border-h); box-shadow: 0 24px 64px rgba(0,0,0,.4); }
     .card:hover::after { opacity: 1; }
-    .card:hover::before { opacity: 1; }
 
     .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
     .card-icon {
@@ -263,7 +242,6 @@
       box-shadow: 0 0 20px var(--c-glow, var(--glow1)); margin-top: auto;
     }
     .btn-launch:hover { transform: translateY(-2px); filter: brightness(1.12); box-shadow: 0 0 36px var(--c-glow, var(--glow1)); }
-    .btn-launch:active { transform: translateY(0); filter: brightness(.95); }
 
     /* ── FOOTER ── */
     footer { border-top: 1px solid var(--border); padding: 40px 0 44px; text-align: center; }
@@ -273,7 +251,6 @@
     }
     .footer-note { font-size: 13px; color: var(--muted); line-height: 1.8; }
     .footer-note a { color: var(--accent3); text-decoration: none; }
-    .footer-note a:hover { text-decoration: underline; }
     .footer-mit {
       display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; font-size: 12px; font-weight: 600; color: var(--muted);
       background: var(--surface); border: 1px solid var(--border); backdrop-filter: blur(10px); border-radius: 100px; padding: 5px 14px;
@@ -283,7 +260,6 @@
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 10px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.2); }
   </style>
 </head>
 <body>
@@ -346,14 +322,14 @@
           <div class="card-icon">📊</div>
           <span class="micro-badge" style="color:var(--accent2);border-color:var(--accent2);">Minimalist Light</span>
         </div>
-        <div class="card-title">Smart Grading Dashboard</div>
+        <div class="card-title">Smart Grading System</div>
         <p class="card-desc">Calculates GPA weightage, checks attendance thresholds, and assigns dynamic letter grades in real time.</p>
         <div class="tag-row">
           <span class="tag">Conditionals</span>
           <span class="tag">Weightage Calc</span>
           <span class="tag">Attendance Check</span>
         </div>
-        <a href="Smart Grading System.html" class="btn-launch" style="background:var(--accent2);">Launch App ⚡</a>
+        <a href="Smart%20Grading%20System.html" class="btn-launch" style="background:var(--accent2);">Launch App ⚡</a>
       </div>
 
       <div class="card" style="--c-accent:var(--accent3);--c-glow:var(--glow3);">
@@ -361,14 +337,14 @@
           <div class="card-icon">🧮</div>
           <span class="micro-badge" style="color:var(--accent3);border-color:var(--accent3);">Retro Arcade</span>
         </div>
-        <div class="card-title">Advanced Calculator</div>
+        <div class="card-title">Calculator With Validation</div>
         <p class="card-desc">Arithmetic logic system featuring precise switch-case operators with strict zero-division and modulus validations.</p>
         <div class="tag-row">
           <span class="tag">Switch-Case</span>
           <span class="tag">Error Handling</span>
           <span class="tag">Typecasting</span>
         </div>
-        <a href="Calculator With Validation.html" class="btn-launch" style="background:var(--accent3);">Launch App ⚡</a>
+        <a href="Calculator%20With%20Validation.html" class="btn-launch" style="background:var(--accent3);">Launch App ⚡</a>
       </div>
 
       <div class="card" style="--c-accent:var(--accent4);--c-glow:rgba(244,114,182,.18);">
@@ -376,14 +352,14 @@
           <div class="card-icon">📋</div>
           <span class="micro-badge" style="color:var(--accent4);border-color:var(--accent4);">Cyber Dashboard</span>
         </div>
-        <div class="card-title">Exam Marks Manager</div>
+        <div class="card-title">Exam Mark Manager</div>
         <p class="card-desc">Processes multi-student score arrays to output class average, maximum/minimum metrics, and filters high achievers.</p>
         <div class="tag-row">
           <span class="tag">Arrays</span>
           <span class="tag">Min-Max Track</span>
           <span class="tag">Data Filters</span>
         </div>
-        <a href="Exam Mark Manager.html" class="btn-launch" style="background:var(--accent4);">Launch App ⚡</a>
+        <a href="Exam%20Mark%20Manager.html" class="btn-launch" style="background:var(--accent4);">Launch App ⚡</a>
       </div>
 
       <div class="card" style="--c-accent:var(--accent5);--c-glow:rgba(251,146,60,.18);">
@@ -398,7 +374,7 @@
           <span class="tag">Regex Logic</span>
           <span class="tag">Validation Rules</span>
         </div>
-        <a href="Password Strength Analyzer.html" class="btn-launch" style="background:var(--accent5);">Launch App ⚡</a>
+        <a href="Passoward%20Strength%20Analyzer.html" class="btn-launch" style="background:var(--accent5);">Launch App ⚡</a>
       </div>
 
       <div class="card" style="--c-accent:var(--accent7);--c-glow:rgba(244,63,94,.18);">
@@ -413,7 +389,7 @@
           <span class="tag">Loops</span>
           <span class="tag">Discount Logic</span>
         </div>
-        <a href="Product Price Tracker.html" class="btn-launch" style="background:var(--accent7);">Launch App ⚡</a>
+        <a href="Product%20Price%20Tracker.html" class="btn-launch" style="background:var(--accent7);">Launch App ⚡</a>
       </div>
 
       <div class="card" style="--c-accent:var(--accent6);--c-glow:rgba(52,211,153,.18);">
@@ -428,7 +404,7 @@
           <span class="tag">Functions</span>
           <span class="tag">Input Selection</span>
         </div>
-        <a href="Universty Course Registration.html" class="btn-launch" style="background:var(--accent6);">Launch App ⚡</a>
+        <a href="Universty%20Course%20Registration.html" class="btn-launch" style="background:var(--accent6);">Launch App ⚡</a>
       </div>
 
     </div><footer>
