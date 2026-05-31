@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Calc — Modern Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:       #f0f0f5;
+  --surface:  #ffffff;
+  --shadow:   0 32px 80px rgba(0,0,0,.14), 0 8px 24px rgba(0,0,0,.08);
+  --num:      #1c1c1e;
+  --num-bg:   #ffffff;
+  --num-hover:#f5f5f7;
+  --op-bg:    #ff9f0a;
+  --op-hover: #ffb340;
+  --op-text:  #ffffff;
+  --fn-bg:    #d4d4d8;
+  --fn-hover: #c8c8cc;
+  --fn-text:  #1c1c1e;
+  --eq-bg:    #ff9f0a;
+  --screen:   #1c1c1e;
+  --expr:     rgba(255,255,255,.35);
+  --main:     #ffffff;
+  --radius:   28px;
+  --font:     'Inter', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* subtle background pattern */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 50% at 20% 20%, rgba(255,159,10,.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 80%, rgba(100,100,255,.05) 0%, transparent 60%);
+}
+
+/* ── CALCULATOR SHELL ── */
+.calc {
+  position: relative; z-index: 1;
+  width: 340px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+/* ── SCREEN ── */
+.screen {
+  background: var(--screen);
+  padding: 32px 28px 24px;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.screen-expr {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--expr);
+  text-align: right;
+  min-height: 20px;
+  letter-spacing: -.2px;
+  transition: opacity .2s;
+  word-break: break-all;
+}
+
+.screen-main {
+  font-size: 52px;
+  font-weight: 300;
+  color: var(--main);
+  text-align: right;
+  letter-spacing: -2px;
+  line-height: 1;
+  transition: font-size .15s, color .2s;
+  word-break: break-all;
+}
+
+.screen-main.shrink { font-size: 36px; }
+.screen-main.small  { font-size: 26px; }
+
+.screen-main.error {
+  font-size: 18px; font-weight: 500;
+  color: #ff453a;
+  animation: shake .35s cubic-bezier(.36,.07,.19,.97);
+}
+.screen-main.warn {
+  font-size: 14px; font-weight: 500;
+  color: #ff9f0a; letter-spacing: -.3px;
+  animation: shake .35s cubic-bezier(.36,.07,.19,.97);
+}
+@keyframes shake {
+  10%,90%  { transform: translateX(-2px); }
+  20%,80%  { transform: translateX(3px); }
+  30%,50%,70% { transform: translateX(-3px); }
+  40%,60%  { transform: translateX(3px); }
+  100%     { transform: none; }
+}
+
+/* ── KEYPAD ── */
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: #e5e5ea;
+}
+
+.key {
+  border: none; outline: none; cursor: pointer;
+  font-family: var(--font);
+  font-size: 22px; font-weight: 400;
+  height: 78px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .12s, transform .08s;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.key:active { transform: scale(.94); }
+.key.flash  { transform: scale(.94); }
+
+/* Number keys */
+.key-num {
+  background: var(--num-bg);
+  color: var(--num);
+}
+.key-num:hover { background: var(--num-hover); }
+
+/* Wide zero */
+.key-zero {
+  grid-column: span 2;
+  justify-content: flex-start;
+  padding-left: 30px;
+  font-size: 22px;
+}
+
+/* Function keys (C, ±, %) */
+.key-fn {
+  background: var(--fn-bg);
+  color: var(--fn-text);
+  font-weight: 500;
+}
+.key-fn:hover { background: var(--fn-hover); }
+
+/* Operator keys */
+.key-op {
+  background: var(--op-bg);
+  color: var(--op-text);
+  font-size: 28px; font-weight: 300;
+}
+.key-op:hover { background: var(--op-hover); }
+.key-op.active-op {
+  background: #ffffff;
+  color: var(--op-bg);
+}
+
+/* Rounded corners on outer keys */
+.key:nth-child(1)  { border-radius: 0 0 0 var(--radius); }  /* C - bottom-left of top row */
+
+/* Bottom row corners */
+.key-zero  { border-radius: 0 0 0 var(--radius); }
+.key:last-child { border-radius: 0 0 var(--radius) 0; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 28px; left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  z-index: 99;
+  background: #1c1c1e; color: #fff;
+  font-size: 13px; font-weight: 500;
+  padding: 10px 20px; border-radius: 99px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.22);
+  white-space: nowrap;
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+  opacity: 0;
+}
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="calc">
+  <!-- Screen -->
+  <div class="screen">
+    <div class="screen-expr" id="screen-expr"></div>
+    <div class="screen-main" id="screen-main">0</div>
+  </div>
+
+  <!-- Keypad -->
+  <div class="keypad">
+    <!-- Row 1 -->
+    <button class="key key-fn"  data-val="C"  onclick="handleKey('C')">AC</button>
+    <button class="key key-fn"  data-val="±"  onclick="handleKey('±')">⁺∕₋</button>
+    <button class="key key-fn"  data-val="⌫"  onclick="handleKey('⌫')">⌫</button>
+    <button class="key key-op"  data-val="/"  id="op-/" onclick="handleKey('/')">÷</button>
+
+    <!-- Row 2 -->
+    <button class="key key-num" data-val="7"  onclick="handleKey('7')">7</button>
+    <button class="key key-num" data-val="8"  onclick="handleKey('8')">8</button>
+    <button class="key key-num" data-val="9"  onclick="handleKey('9')">9</button>
+    <button class="key key-op"  data-val="*"  id="op-*" onclick="handleKey('*')">×</button>
+
+    <!-- Row 3 -->
+    <button class="key key-num" data-val="4"  onclick="handleKey('4')">4</button>
+    <button class="key key-num" data-val="5"  onclick="handleKey('5')">5</button>
+    <button class="key key-num" data-val="6"  onclick="handleKey('6')">6</button>
+    <button class="key key-op"  data-val="-"  id="op--" onclick="handleKey('-')">−</button>
+
+    <!-- Row 4 -->
+    <button class="key key-num" data-val="1"  onclick="handleKey('1')">1</button>
+    <button class="key key-num" data-val="2"  onclick="handleKey('2')">2</button>
+    <button class="key key-num" data-val="3"  onclick="handleKey('3')">3</button>
+    <button class="key key-op"  data-val="+"  id="op-+" onclick="handleKey('+')">+</button>
+
+    <!-- Row 5 -->
+    <button class="key key-num key-zero" data-val="0" onclick="handleKey('0')">0</button>
+    <button class="key key-num" data-val="." onclick="handleKey('.')">.</button>
+    <button class="key key-op"  data-val="%" id="op-%" onclick="handleKey('%')">%</button>
+    <button class="key key-op"  data-val="=" onclick="handleKey('=')">=</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──
+let displayA    = '';
+let displayB    = '';
+let operator    = '';
+let justCalc    = false;
+let hasDecA     = false;
+let hasDecB     = false;
+
+const exprEl = document.getElementById('screen-expr');
+const mainEl = document.getElementById('screen-main');
+
+// ── RENDER ──
+function render(main, expr, mode) {
+  exprEl.textContent = expr || '';
+  mainEl.className   = 'screen-main' + (mode ? ' ' + mode : '');
+  const len = String(main).length;
+  if (!mode) {
+    if (len > 14)     mainEl.classList.add('small');
+    else if (len > 9) mainEl.classList.add('shrink');
+  }
+  mainEl.textContent = main;
+}
+
+function opSym(op) {
+  return { '+':'+', '-':'−', '*':'×', '/':'÷', '%':'%' }[op] || op;
+}
+
+function renderNormal() {
+  const main = operator === '' ? (displayA || '0') : (displayB || '0');
+  const expr = displayA + (operator ? ' ' + opSym(operator) : '');
+  render(main, expr);
+  highlightOp(operator && displayB === '' ? operator : '');
+}
+
+function highlightOp(op) {
+  ['/',  '*', '-', '+', '%'].forEach(o => {
+    const el = document.getElementById('op-' + o);
+    if (el) el.classList.toggle('active-op', o === op);
+  });
+}
+
+// ── HANDLE KEY ──
+function handleKey(k) {
+  flash(k);
+
+  if (k === 'C') { reset(); return; }
+
+  if (k === '⌫') {
+    if (justCalc) { reset(); return; }
+    if (operator === '') { displayA = displayA.slice(0,-1); hasDecA = displayA.includes('.'); }
+    else                 { displayB = displayB.slice(0,-1); hasDecB = displayB.includes('.'); }
+    renderNormal(); return;
+  }
+
+  if (k === '±') {
+    if (operator === '' && displayA) displayA = displayA.startsWith('-') ? displayA.slice(1) : '-'+displayA;
+    else if (operator && displayB)   displayB = displayB.startsWith('-') ? displayB.slice(1) : '-'+displayB;
+    renderNormal(); return;
+  }
+
+  if ('0123456789'.includes(k)) {
+    if (justCalc) reset();
+    if (operator === '') { if (displayA.replace('-','').length < 12) displayA += k; }
+    else                 { if (displayB.replace('-','').length < 12) displayB += k; }
+    renderNormal(); return;
+  }
+
+  if (k === '.') {
+    if (justCalc) reset();
+    if (operator === '') { if (!hasDecA) { displayA = (displayA||'0')+'.'; hasDecA=true; } }
+    else                 { if (!hasDecB) { displayB = (displayB||'0')+'.'; hasDecB=true; } }
+    renderNormal(); return;
+  }
+
+  if ('+-*/'.includes(k)) {
+    if (justCalc) justCalc = false;
+    if (displayA === '' && displayB === '') return;
+    if (displayA !== '' && displayB !== '' && operator !== '') {
+      const r = calculate();
+      if (r === null) return;
+      displayA = String(r); displayB = ''; hasDecA = displayA.includes('.'); hasDecB = false;
+    }
+    if (!displayA) displayA = '0';
+    operator = k; renderNormal(); return;
+  }
+
+  // % as modulus operator
+  if (k === '%') {
+    if (justCalc) justCalc = false;
+    if (!displayA) return;
+    if (displayA !== '' && displayB !== '' && operator !== '') {
+      const r = calculate();
+      if (r === null) return;
+      displayA = String(r); displayB = ''; hasDecA = displayA.includes('.'); hasDecB = false;
+    }
+    operator = '%'; renderNormal(); return;
+  }
+
+  if (k === '=') {
+    if (!displayA || !operator || !displayB) return;
+    const result = calculate();
+    if (result === null) return;
+    const expr = displayA + ' ' + opSym(operator) + ' ' + displayB + ' =';
+    const fmt  = formatResult(result);
+    render(fmt, expr);
+    highlightOp('');
+    displayA = String(result); displayB = ''; operator = '';
+    hasDecA = displayA.includes('.'); hasDecB = false;
+    justCalc = true;
+  }
+}
+
+// ── C++ SWITCH-CASE LOGIC ──
+function calculate() {
+  const a = parseFloat(displayA);
+  const b = parseFloat(displayB);
+
+  // C++: if((ch=='/'||ch=='%') && b==0) → Error Invalid
+  if ((operator === '/' || operator === '%') && b === 0) {
+    render('Error: Div by Zero', displayA + ' ' + opSym(operator) + ' ' + displayB, 'error');
+    toast('Cannot divide or mod by zero');
+    highlightOp('');
+    justCalc = true; return null;
+  }
+
+  let temp;
+  switch (operator) {
+    case '+': temp = a + b; break;
+    case '-': temp = a - b; break;
+    case '*': temp = a * b; break;
+    case '/': temp = a / b; break;
+    case '%':
+      // C++: if(a==(int)a && b==(int)b) else error
+      if (Number.isInteger(a) && Number.isInteger(b)) {
+        temp = a % b;
+      } else {
+        render('Integers only for %', displayA + ' % ' + displayB, 'warn');
+        toast('Modulus only works with integers');
+        highlightOp('');
+        justCalc = true; return null;
+      }
+      break;
+    default:
+      render('Invalid operator', '', 'error');
+      return null;
+  }
+  return temp;
+}
+
+function formatResult(v) {
+  if (!isFinite(v)) return 'Error';
+  const s = parseFloat(v.toPrecision(12)).toString();
+  return s.length > 14 ? parseFloat(v.toExponential(4)).toString() : s;
+}
+
+function reset() {
+  displayA = ''; displayB = ''; operator = '';
+  hasDecA = hasDecB = justCalc = false;
+  render('0', ''); highlightOp('');
+}
+
+// ── FLASH BUTTON ──
+function flash(val) {
+  const el = document.querySelector(`.key[data-val="${val}"]`);
+  if (!el) return;
+  el.classList.add('flash');
+  setTimeout(() => el.classList.remove('flash'), 120);
+}
+
+// ── KEYBOARD ──
+document.addEventListener('keydown', e => {
+  const map = {
+    '0':'0','1':'1','2':'2','3':'3','4':'4',
+    '5':'5','6':'6','7':'7','8':'8','9':'9',
+    '+':'+','-':'-','*':'*','.':'.',
+    'Enter':'=','=':'=','Backspace':'⌫','Escape':'C'
+  };
+  if (e.key === '/') { e.preventDefault(); handleKey('/'); return; }
+  if (e.key === '%') { handleKey('%'); return; }
+  if (map[e.key]) handleKey(map[e.key]);
+});
+
+// ── TOAST ──
+let _tt;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_tt);
+  _tt = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+render('0', '');
+</script>
+</body>
+</html>

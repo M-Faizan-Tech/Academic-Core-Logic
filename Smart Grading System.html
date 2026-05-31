@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GradeIQ — Student Performance Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:         #f1f5f9;
+  --surface:    #ffffff;
+  --border:     #e2e8f0;
+  --border-2:   #cbd5e1;
+  --blue:       #2563eb;
+  --blue-lt:    #eff6ff;
+  --blue-mid:   #bfdbfe;
+  --emerald:    #059669;
+  --emerald-lt: #ecfdf5;
+  --amber:      #d97706;
+  --amber-lt:   #fffbeb;
+  --amber-mid:  #fde68a;
+  --rose:       #e11d48;
+  --rose-lt:    #fff1f2;
+  --slate:      #64748b;
+  --slate-lt:   #f8fafc;
+  --text:       #0f172a;
+  --text-2:     #334155;
+  --text-3:     #64748b;
+  --font:       'Plus Jakarta Sans', sans-serif;
+  --shadow-sm:  0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
+  --shadow:     0 4px 16px rgba(0,0,0,.07), 0 1px 4px rgba(0,0,0,.04);
+  --shadow-lg:  0 12px 40px rgba(0,0,0,.10), 0 2px 8px rgba(0,0,0,.05);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── TOP NAV ── */
+nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 40px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 60px;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+.nav-brand { display: flex; align-items: center; gap: 10px; }
+.nav-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--blue), #1d4ed8);
+  display: grid; place-items: center; font-size: 15px;
+  box-shadow: 0 2px 8px rgba(37,99,235,.3);
+}
+.nav-title { font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: -.3px; }
+.nav-title span { color: var(--blue); }
+.nav-right { display: flex; align-items: center; gap: 10px; }
+.nav-tag {
+  font-size: 11px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase;
+  color: var(--text-3); background: var(--bg); border: 1px solid var(--border);
+  padding: 4px 12px; border-radius: 99px;
+}
+.btn-demo {
+  padding: 7px 18px; border-radius: 8px; border: none;
+  background: var(--blue); color: #fff;
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .18s;
+  box-shadow: 0 2px 8px rgba(37,99,235,.25);
+}
+.btn-demo:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(37,99,235,.35); }
+.btn-reset {
+  padding: 7px 16px; border-radius: 8px;
+  border: 1.5px solid var(--border-2); background: var(--surface);
+  color: var(--text-2); font-family: var(--font); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .18s;
+}
+.btn-reset:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-lt); }
+
+/* ── MAIN LAYOUT ── */
+.main {
+  max-width: 1140px; margin: 0 auto;
+  padding: 36px 24px 60px;
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* ── SECTION TITLE ── */
+.sec-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.2px; color: var(--text-3); margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.sec-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* ── CARD BASE ── */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; box-shadow: var(--shadow);
+  transition: box-shadow .2s;
+}
+
+/* ── WEIGHT SUMMARY ROW ── */
+.weight-row {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  margin-bottom: 24px;
+}
+.wcard {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px 18px;
+  box-shadow: var(--shadow-sm); position: relative; overflow: hidden;
+}
+.wcard::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  border-radius: 14px 14px 0 0;
+}
+.wcard.quiz::before    { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+.wcard.mids::before    { background: linear-gradient(90deg, var(--blue), #60a5fa); }
+.wcard.finals::before  { background: linear-gradient(90deg, var(--emerald), #34d399); }
+.wcard-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .8px; color: var(--text-3); margin-bottom: 6px; }
+.wcard-val {
+  font-size: 26px; font-weight: 800; letter-spacing: -.5px;
+  transition: all .2s;
+}
+.wcard.quiz   .wcard-val { color: #7c3aed; }
+.wcard.mids   .wcard-val { color: var(--blue); }
+.wcard.finals .wcard-val { color: var(--emerald); }
+.wcard-max { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+/* ── INPUT GROUPS ── */
+.input-groups { display: flex; flex-direction: column; gap: 20px; }
+
+.igroup {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 22px 24px;
+  box-shadow: var(--shadow-sm);
+}
+.igroup-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.igroup-title {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14px; font-weight: 700; color: var(--text);
+}
+.igroup-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: grid; place-items: center; font-size: 15px;
+}
+.igroup.quiz-g   .igroup-icon { background: #ede9fe; }
+.igroup.mids-g   .igroup-icon { background: var(--blue-lt); }
+.igroup.finals-g .igroup-icon { background: var(--emerald-lt); }
+.igroup.att-g    .igroup-icon { background: var(--amber-lt); }
+.weight-pill {
+  font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px;
+  letter-spacing: .3px;
+}
+.quiz-g   .weight-pill { background: #ede9fe; color: #7c3aed; }
+.mids-g   .weight-pill { background: var(--blue-lt); color: var(--blue); }
+.finals-g .weight-pill { background: var(--emerald-lt); color: var(--emerald); }
+.att-g    .weight-pill { background: var(--amber-lt); color: var(--amber); }
+
+.fields-row { display: grid; gap: 12px; }
+.fields-row.three { grid-template-columns: repeat(3, 1fr); }
+.fields-row.one   { grid-template-columns: 1fr; }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 12px; font-weight: 600; color: var(--text-2); }
+.field-wrap { position: relative; }
+.field input {
+  width: 100%; padding: 10px 48px 10px 14px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  background: var(--slate-lt); color: var(--text);
+  font-family: var(--font); font-size: 15px; font-weight: 600;
+  outline: none; transition: all .18s;
+  -moz-appearance: textfield;
+}
+.field input::-webkit-inner-spin-button,
+.field input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.field input:focus { border-color: var(--blue); background: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+.field input.error { border-color: var(--rose); background: var(--rose-lt); box-shadow: 0 0 0 3px rgba(225,29,72,.08); }
+.field input.valid { border-color: #86efac; background: #f0fdf4; }
+.field-max {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  font-size: 11px; font-weight: 600; color: var(--text-3);
+  pointer-events: none;
+}
+.field-err { font-size: 11px; color: var(--rose); font-weight: 500; min-height: 16px; }
+
+/* Progress bar inside input group */
+.igroup-progress { margin-top: 14px; }
+.prog-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.prog-label { font-size: 12px; font-weight: 600; color: var(--text-3); }
+.prog-val   { font-size: 12px; font-weight: 700; }
+.quiz-g   .prog-val { color: #7c3aed; }
+.mids-g   .prog-val { color: var(--blue); }
+.finals-g .prog-val { color: var(--emerald); }
+.att-g    .prog-val { color: var(--amber); }
+.prog-bar { height: 7px; background: var(--border); border-radius: 99px; overflow: hidden; }
+.prog-fill {
+  height: 100%; border-radius: 99px;
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+  width: 0%;
+}
+.quiz-g   .prog-fill { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+.mids-g   .prog-fill { background: linear-gradient(90deg, var(--blue), #60a5fa); }
+.finals-g .prog-fill { background: linear-gradient(90deg, var(--emerald), #34d399); }
+.att-g    .prog-fill { background: linear-gradient(90deg, var(--amber), #fbbf24); }
+.att-g    .prog-fill.warn { background: linear-gradient(90deg, var(--rose), #fb7185); }
+
+/* Attendance warning banner */
+.att-warn {
+  display: none; margin-top: 12px;
+  background: #fff7ed; border: 1px solid #fed7aa;
+  border-radius: 10px; padding: 10px 14px;
+  font-size: 12px; font-weight: 600; color: #c2410c;
+  gap: 8px; align-items: center;
+}
+.att-warn.show { display: flex; }
+
+/* ── RIGHT PANEL ── */
+.right-panel { display: flex; flex-direction: column; gap: 20px; position: sticky; top: 80px; }
+
+/* Total score ring card */
+.score-card { padding: 28px 24px; text-align: center; }
+.ring-wrap { position: relative; width: 160px; height: 160px; margin: 0 auto 18px; }
+.ring-svg { width: 160px; height: 160px; transform: rotate(-90deg); }
+.ring-bg   { fill: none; stroke: var(--border); stroke-width: 10; }
+.ring-fill {
+  fill: none; stroke-width: 10; stroke-linecap: round;
+  stroke-dasharray: 408; stroke-dashoffset: 408;
+  transition: stroke-dashoffset .6s cubic-bezier(.4,0,.2,1), stroke .4s;
+}
+.ring-center {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.ring-score { font-size: 34px; font-weight: 800; letter-spacing: -1px; color: var(--text); transition: color .3s; }
+.ring-sub   { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .5px; }
+.score-label { font-size: 13px; font-weight: 600; color: var(--text-3); margin-bottom: 4px; }
+
+/* Breakdown bars */
+.breakdown { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+.bk-row { display: flex; align-items: center; gap: 10px; }
+.bk-name { font-size: 12px; font-weight: 600; color: var(--text-3); width: 64px; flex-shrink: 0; }
+.bk-bar  { flex: 1; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+.bk-fill { height: 100%; border-radius: 99px; transition: width .4s cubic-bezier(.4,0,.2,1); width: 0%; }
+.bk-row.q .bk-fill  { background: linear-gradient(90deg,#8b5cf6,#a78bfa); }
+.bk-row.m .bk-fill  { background: linear-gradient(90deg,var(--blue),#60a5fa); }
+.bk-row.f .bk-fill  { background: linear-gradient(90deg,var(--emerald),#34d399); }
+.bk-val  { font-size: 12px; font-weight: 700; color: var(--text-2); width: 36px; text-align: right; flex-shrink: 0; }
+
+/* Grade card */
+.grade-card { padding: 24px; }
+.grade-display {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.grade-letter {
+  width: 72px; height: 72px; border-radius: 18px;
+  display: grid; place-items: center;
+  font-size: 40px; font-weight: 800;
+  transition: all .35s cubic-bezier(.34,1.56,.64,1);
+}
+.grade-letter.A { background: #ecfdf5; color: var(--emerald); box-shadow: 0 4px 20px rgba(5,150,105,.2); }
+.grade-letter.B { background: var(--blue-lt); color: var(--blue); box-shadow: 0 4px 20px rgba(37,99,235,.18); }
+.grade-letter.C { background: #fffbeb; color: var(--amber); box-shadow: 0 4px 20px rgba(217,119,6,.18); }
+.grade-letter.D { background: #fff7ed; color: #ea580c; box-shadow: 0 4px 20px rgba(234,88,12,.18); }
+.grade-letter.F { background: var(--rose-lt); color: var(--rose); box-shadow: 0 4px 20px rgba(225,29,72,.18); }
+.grade-letter.idle { background: var(--bg); color: var(--text-3); box-shadow: none; }
+.grade-info { text-align: right; }
+.grade-tag {
+  display: inline-block; font-size: 11px; font-weight: 700;
+  padding: 4px 12px; border-radius: 99px; margin-bottom: 6px;
+  text-transform: uppercase; letter-spacing: .5px;
+}
+.grade-tag.A { background: #ecfdf5; color: var(--emerald); }
+.grade-tag.B { background: var(--blue-lt); color: var(--blue); }
+.grade-tag.C { background: #fffbeb; color: var(--amber); }
+.grade-tag.D { background: #fff7ed; color: #ea580c; }
+.grade-tag.F { background: var(--rose-lt); color: var(--rose); }
+.grade-tag.idle { background: var(--bg); color: var(--text-3); }
+.grade-note { font-size: 12px; color: var(--text-3); font-weight: 500; line-height: 1.5; }
+
+.condition-list { display: flex; flex-direction: column; gap: 8px; }
+.cond-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px;
+  background: var(--bg); border: 1px solid var(--border);
+  font-size: 12px; font-weight: 500; color: var(--text-3);
+  transition: all .2s;
+}
+.cond-row.active { background: var(--blue-lt); border-color: var(--blue-mid); color: var(--blue); font-weight: 700; }
+.cond-row.active.A { background: #ecfdf5; border-color: #a7f3d0; color: var(--emerald); }
+.cond-row.active.C { background: #fffbeb; border-color: var(--amber-mid); color: var(--amber); }
+.cond-row.active.D { background: #fff7ed; border-color: #fdba74; color: #ea580c; }
+.cond-row.active.F { background: var(--rose-lt); border-color: #fda4af; color: var(--rose); }
+.cond-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border-2); flex-shrink: 0; transition: background .2s; }
+.cond-row.active .cond-dot { background: currentColor; }
+
+/* Attend penalty note */
+.att-penalty {
+  display: none; margin-top: 12px;
+  background: #fff7ed; border: 1px solid #fed7aa;
+  border-radius: 10px; padding: 12px 14px;
+  font-size: 12px; color: #92400e; line-height: 1.6;
+}
+.att-penalty.show { display: block; }
+.att-penalty strong { color: #c2410c; }
+
+@media(max-width:960px) {
+  .main { grid-template-columns: 1fr; }
+  .right-panel { position: static; }
+  .weight-row { grid-template-columns: repeat(3,1fr); }
+}
+@media(max-width:560px) {
+  .weight-row { grid-template-columns: 1fr; }
+  nav { padding: 0 16px; }
+  .main { padding: 20px 16px 40px; }
+  .fields-row.three { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-icon">📊</div>
+    <div class="nav-title">Grade<span>IQ</span></div>
+  </div>
+  <div class="nav-right">
+    <span class="nav-tag">Smart Grading System</span>
+    <button class="btn-reset" onclick="resetAll()">↺ Reset</button>
+    <button class="btn-demo"  onclick="fillDemo()">⚡ Fill Demo</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT: Inputs -->
+  <div class="left-col">
+
+    <!-- Input groups -->
+    <div class="sec-title">Enter Marks</div>
+    <div class="input-groups">
+
+      <!-- Quizzes -->
+      <div class="igroup quiz-g">
+        <div class="igroup-header">
+          <div class="igroup-title">
+            <div class="igroup-icon">📝</div> Quiz Marks
+          </div>
+          <span class="weight-pill">20% Weight</span>
+        </div>
+        <div class="fields-row three">
+          <div class="field">
+            <label>Quiz 1</label>
+            <div class="field-wrap">
+              <input type="number" id="q1" min="0" max="10" placeholder="0" oninput="validate(this,10);calc()"/>
+              <span class="field-max">/10</span>
+            </div>
+            <span class="field-err" id="q1-err"></span>
+          </div>
+          <div class="field">
+            <label>Quiz 2</label>
+            <div class="field-wrap">
+              <input type="number" id="q2" min="0" max="10" placeholder="0" oninput="validate(this,10);calc()"/>
+              <span class="field-max">/10</span>
+            </div>
+            <span class="field-err" id="q2-err"></span>
+          </div>
+          <div class="field">
+            <label>Quiz 3</label>
+            <div class="field-wrap">
+              <input type="number" id="q3" min="0" max="10" placeholder="0" oninput="validate(this,10);calc()"/>
+              <span class="field-max">/10</span>
+            </div>
+            <span class="field-err" id="q3-err"></span>
+          </div>
+        </div>
+        <div class="igroup-progress">
+          <div class="prog-row">
+            <span class="prog-label">Weighted Score</span>
+            <span class="prog-val" id="quiz-prog-val">0 / 20</span>
+          </div>
+          <div class="prog-bar"><div class="prog-fill" id="quiz-prog-bar"></div></div>
+        </div>
+      </div>
+
+      <!-- Midterm -->
+      <div class="igroup mids-g">
+        <div class="igroup-header">
+          <div class="igroup-title">
+            <div class="igroup-icon">📄</div> Midterm Exam
+          </div>
+          <span class="weight-pill">30% Weight</span>
+        </div>
+        <div class="fields-row one">
+          <div class="field">
+            <label>Midterm Marks</label>
+            <div class="field-wrap">
+              <input type="number" id="mids" min="0" max="35" placeholder="0" oninput="validate(this,35);calc()"/>
+              <span class="field-max">/35</span>
+            </div>
+            <span class="field-err" id="mids-err"></span>
+          </div>
+        </div>
+        <div class="igroup-progress">
+          <div class="prog-row">
+            <span class="prog-label">Weighted Score</span>
+            <span class="prog-val" id="mids-prog-val">0 / 30</span>
+          </div>
+          <div class="prog-bar"><div class="prog-fill" id="mids-prog-bar"></div></div>
+        </div>
+      </div>
+
+      <!-- Finals -->
+      <div class="igroup finals-g">
+        <div class="igroup-header">
+          <div class="igroup-title">
+            <div class="igroup-icon">🎯</div> Final Exam
+          </div>
+          <span class="weight-pill">50% Weight</span>
+        </div>
+        <div class="fields-row one">
+          <div class="field">
+            <label>Final Marks</label>
+            <div class="field-wrap">
+              <input type="number" id="finals" min="0" max="40" placeholder="0" oninput="validate(this,40);calc()"/>
+              <span class="field-max">/40</span>
+            </div>
+            <span class="field-err" id="finals-err"></span>
+          </div>
+        </div>
+        <div class="igroup-progress">
+          <div class="prog-row">
+            <span class="prog-label">Weighted Score</span>
+            <span class="prog-val" id="finals-prog-val">0 / 50</span>
+          </div>
+          <div class="prog-bar"><div class="prog-fill" id="finals-prog-bar"></div></div>
+        </div>
+      </div>
+
+      <!-- Attendance -->
+      <div class="igroup att-g" id="att-group">
+        <div class="igroup-header">
+          <div class="igroup-title">
+            <div class="igroup-icon">📅</div> Attendance
+          </div>
+          <span class="weight-pill">Affects Grade</span>
+        </div>
+        <div class="fields-row one">
+          <div class="field">
+            <label>Attendance Percentage</label>
+            <div class="field-wrap">
+              <input type="number" id="att" min="0" max="100" placeholder="0" oninput="validate(this,100);calc()"/>
+              <span class="field-max">%</span>
+            </div>
+            <span class="field-err" id="att-err"></span>
+          </div>
+        </div>
+        <div class="igroup-progress">
+          <div class="prog-row">
+            <span class="prog-label">Attendance</span>
+            <span class="prog-val" id="att-prog-val">0%</span>
+          </div>
+          <div class="prog-bar"><div class="prog-fill" id="att-prog-bar"></div></div>
+        </div>
+        <div class="att-warn" id="att-warn">
+          ⚠️ Attendance below 75% — your grade will be reduced by one level per grading rules.
+        </div>
+      </div>
+
+    </div><!-- /input-groups -->
+
+    <!-- Weightage summary -->
+    <div class="sec-title" style="margin-top:24px">Weightage Breakdown</div>
+    <div class="weight-row">
+      <div class="wcard quiz">
+        <div class="wcard-label">Quizzes</div>
+        <div class="wcard-val" id="wv-quiz">0.00</div>
+        <div class="wcard-max">out of 20 pts</div>
+      </div>
+      <div class="wcard mids">
+        <div class="wcard-label">Midterm</div>
+        <div class="wcard-val" id="wv-mids">0.00</div>
+        <div class="wcard-max">out of 30 pts</div>
+      </div>
+      <div class="wcard finals">
+        <div class="wcard-label">Finals</div>
+        <div class="wcard-val" id="wv-finals">0.00</div>
+        <div class="wcard-max">out of 50 pts</div>
+      </div>
+    </div>
+
+  </div><!-- /left-col -->
+
+  <!-- RIGHT: Report Card -->
+  <div class="right-panel">
+
+    <!-- Score ring -->
+    <div class="card score-card">
+      <div class="sec-title" style="margin-bottom:18px">Total Score</div>
+      <div class="ring-wrap">
+        <svg class="ring-svg" viewBox="0 0 130 130">
+          <circle class="ring-bg"   cx="65" cy="65" r="56"/>
+          <circle class="ring-fill" cx="65" cy="65" r="56" id="ring-fill"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-score" id="ring-score">0</div>
+          <div class="ring-sub">/ 100</div>
+        </div>
+      </div>
+      <div class="score-label">Weighted Score Breakdown</div>
+      <div class="breakdown">
+        <div class="bk-row q">
+          <span class="bk-name">Quizzes</span>
+          <div class="bk-bar"><div class="bk-fill" id="bk-q" style="width:0%"></div></div>
+          <span class="bk-val" id="bk-q-val">0</span>
+        </div>
+        <div class="bk-row m">
+          <span class="bk-name">Midterm</span>
+          <div class="bk-bar"><div class="bk-fill" id="bk-m" style="width:0%"></div></div>
+          <span class="bk-val" id="bk-m-val">0</span>
+        </div>
+        <div class="bk-row f">
+          <span class="bk-name">Finals</span>
+          <div class="bk-bar"><div class="bk-fill" id="bk-f" style="width:0%"></div></div>
+          <span class="bk-val" id="bk-f-val">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grade card -->
+    <div class="card grade-card">
+      <div class="sec-title" style="margin-bottom:14px">Report Card</div>
+      <div class="grade-display">
+        <div class="grade-letter idle" id="grade-letter">—</div>
+        <div class="grade-info">
+          <div class="grade-tag idle" id="grade-tag">Pending</div>
+          <div class="grade-note" id="grade-note">Enter all marks<br/>to calculate grade.</div>
+        </div>
+      </div>
+
+      <!-- C++ condition map -->
+      <div class="sec-title" style="margin-bottom:10px">Grading Conditions</div>
+      <div class="condition-list">
+        <div class="cond-row" id="cond-A">
+          <div class="cond-dot"></div> Score ≥ 85 &amp; Attendance ≥ 75% → <strong>A</strong>
+        </div>
+        <div class="cond-row" id="cond-B1">
+          <div class="cond-dot"></div> Score ≥ 85 &amp; Attendance &lt; 75% → <strong>B</strong>
+        </div>
+        <div class="cond-row" id="cond-B2">
+          <div class="cond-dot"></div> Score ≥ 70 &amp; Attendance ≥ 75% → <strong>B</strong>
+        </div>
+        <div class="cond-row" id="cond-C1">
+          <div class="cond-dot"></div> Score ≥ 70 &amp; Attendance &lt; 75% → <strong>C</strong>
+        </div>
+        <div class="cond-row" id="cond-C2">
+          <div class="cond-dot"></div> Score ≥ 50 &amp; Attendance ≥ 75% → <strong>C</strong>
+        </div>
+        <div class="cond-row" id="cond-D">
+          <div class="cond-dot"></div> Score ≥ 50 &amp; Attendance &lt; 75% → <strong>D</strong>
+        </div>
+        <div class="cond-row" id="cond-F">
+          <div class="cond-dot"></div> Score &lt; 50 → <strong>F</strong>
+        </div>
+      </div>
+
+      <div class="att-penalty" id="att-penalty">
+        <strong>⚠️ Attendance Penalty Applied</strong><br/>
+        Your raw score qualifies for a higher grade, but attendance below 75% has reduced your final grade by one level — exactly as per the grading rules.
+      </div>
+    </div>
+
+  </div><!-- /right-panel -->
+</div><!-- /main -->
+
+<script>
+// ── C++ FORMULA IMPLEMENTATION ──
+
+// validate: real-time input guard (max limit per field)
+function validate(el, max) {
+  const v   = parseFloat(el.value);
+  const err = document.getElementById(el.id + '-err');
+  el.classList.remove('error','valid');
+  if (el.value === '') { if(err) err.textContent=''; return true; }
+  if (isNaN(v) || v < 0) {
+    el.classList.add('error');
+    if(err) err.textContent = 'Enter a valid number.';
+    return false;
+  }
+  if (v > max) {
+    el.value = max;  // auto-clamp
+    el.classList.add('valid');
+    if(err) err.textContent = '';
+    return true;
+  }
+  el.classList.add('valid');
+  if(err) err.textContent = '';
+  return true;
+}
+
+function getVal(id) {
+  const v = parseFloat(document.getElementById(id).value);
+  return isNaN(v) ? 0 : v;
+}
+
+function calc() {
+  // ── C++ Math ──
+  // quiz1, quiz2, quiz3 (each /10), sum/30 * 20
+  const quiz1 = getVal('q1');
+  const quiz2 = getVal('q2');
+  const quiz3 = getVal('q3');
+  const sum   = quiz1 + quiz2 + quiz3;
+  const quizweight  = (sum  / 30.0) * 20;   // C++: quizweight = (sum/30.0)*20
+
+  // mids /35 * 30
+  const mids        = getVal('mids');
+  const midsweight  = (mids / 35.0) * 30;   // C++: midsweight = (mids/35.0)*30
+
+  // final /40 * 50
+  const finals      = getVal('finals');
+  const finalweight = (finals / 40.0) * 50; // C++: finalweight = (final/40.0)*50
+
+  const total = quizweight + midsweight + finalweight; // C++: total = ...
+  const att   = getVal('att');
+
+  // ── Update weightage summary cards ──
+  document.getElementById('wv-quiz').textContent   = quizweight.toFixed(2);
+  document.getElementById('wv-mids').textContent   = midsweight.toFixed(2);
+  document.getElementById('wv-finals').textContent = finalweight.toFixed(2);
+
+  // ── Progress bars for each group ──
+  const qPct = (quizweight / 20) * 100;
+  document.getElementById('quiz-prog-bar').style.width = qPct + '%';
+  document.getElementById('quiz-prog-val').textContent = quizweight.toFixed(1) + ' / 20';
+
+  const mPct = (midsweight / 30) * 100;
+  document.getElementById('mids-prog-bar').style.width = mPct + '%';
+  document.getElementById('mids-prog-val').textContent = midsweight.toFixed(1) + ' / 30';
+
+  const fPct = (finalweight / 50) * 100;
+  document.getElementById('finals-prog-bar').style.width = fPct + '%';
+  document.getElementById('finals-prog-val').textContent = finalweight.toFixed(1) + ' / 50';
+
+  const attBar = document.getElementById('att-prog-bar');
+  attBar.style.width = att + '%';
+  attBar.classList.toggle('warn', att > 0 && att < 75);
+  document.getElementById('att-prog-val').textContent = att.toFixed(0) + '%';
+
+  // ── Attendance warning ──
+  const attWarn  = document.getElementById('att-warn');
+  const attGroup = document.getElementById('att-group');
+  const lowAtt   = att > 0 && att < 75;
+  attWarn.classList.toggle('show', lowAtt);
+  attGroup.style.borderColor = lowAtt ? '#fed7aa' : '';
+  attGroup.style.boxShadow   = lowAtt ? '0 0 0 3px rgba(217,119,6,.1)' : '';
+
+  // ── Score ring ──
+  const totalRound = Math.round(total * 10) / 10;
+  document.getElementById('ring-score').textContent = totalRound.toFixed(1);
+  const circumference = 2 * Math.PI * 56; // 351.86
+  const offset = circumference - (total / 100) * circumference;
+  const ring = document.getElementById('ring-fill');
+  ring.style.strokeDasharray  = circumference;
+  ring.style.strokeDashoffset = offset;
+  const ringColor = total >= 85 ? '#059669' : total >= 70 ? '#2563eb' : total >= 50 ? '#d97706' : '#e11d48';
+  ring.style.stroke = ringColor;
+
+  // ── Breakdown mini bars ──
+  document.getElementById('bk-q').style.width  = (quizweight  / 20) * 100 + '%';
+  document.getElementById('bk-m').style.width  = (midsweight  / 30) * 100 + '%';
+  document.getElementById('bk-f').style.width  = (finalweight / 50) * 100 + '%';
+  document.getElementById('bk-q-val').textContent = quizweight.toFixed(1);
+  document.getElementById('bk-m-val').textContent = midsweight.toFixed(1);
+  document.getElementById('bk-f-val').textContent = finalweight.toFixed(1);
+
+  // ── C++ Grade Conditions (exact if-else chain) ──
+  let grade = null;
+  let condId = null;
+  let penaltyApplied = false;
+
+  if (total >= 85 && att >= 75)      { grade='A'; condId='cond-A'; }
+  else if (total >= 85 && att < 75)  { grade='B'; condId='cond-B1'; penaltyApplied=true; }
+  else if (total >= 70 && att >= 75) { grade='B'; condId='cond-B2'; }
+  else if (total >= 70 && att < 75)  { grade='C'; condId='cond-C1'; penaltyApplied=true; }
+  else if (total >= 50 && att >= 75) { grade='C'; condId='cond-C2'; }
+  else if (total >= 50 && att < 75)  { grade='D'; condId='cond-D';  penaltyApplied=true; }
+  else if (total > 0 || att > 0)     { grade='F'; condId='cond-F';  }
+
+  // Only show grade if at least one field is filled
+  const anyFilled = quiz1||quiz2||quiz3||mids||finals||att;
+  updateGradeUI(grade, condId, penaltyApplied, anyFilled);
+}
+
+const GRADE_NOTES = {
+  A: 'Outstanding performance!<br/>Excellent work across all components.',
+  B: 'Good performance.<br/>Solid results with room for excellence.',
+  C: 'Satisfactory performance.<br/>Meeting minimum standards.',
+  D: 'Below average.<br/>Significant improvement needed.',
+  F: 'Failing grade.<br/>Does not meet minimum requirements.',
+};
+const GRADE_TAGS = {
+  A:'Excellent', B:'Good', C:'Average', D:'Below Avg', F:'Fail'
+};
+
+function updateGradeUI(grade, condId, penalty, anyFilled) {
+  const gl   = document.getElementById('grade-letter');
+  const gt   = document.getElementById('grade-tag');
+  const gn   = document.getElementById('grade-note');
+  const gpen = document.getElementById('att-penalty');
+
+  // Clear active conditions
+  document.querySelectorAll('.cond-row').forEach(r => {
+    r.classList.remove('active','A','B','C','D','F');
+  });
+
+  if (!anyFilled || !grade) {
+    gl.className  = 'grade-letter idle'; gl.textContent = '—';
+    gt.className  = 'grade-tag idle';    gt.textContent = 'Pending';
+    gn.textContent= 'Enter all marks\nto calculate grade.';
+    gpen.classList.remove('show');
+    return;
+  }
+
+  gl.className  = `grade-letter ${grade}`; gl.textContent = grade;
+  gt.className  = `grade-tag ${grade}`;    gt.textContent = GRADE_TAGS[grade];
+  gn.innerHTML  = GRADE_NOTES[grade];
+
+  if (condId) {
+    const row = document.getElementById(condId);
+    row.classList.add('active', grade);
+  }
+
+  gpen.classList.toggle('show', penalty);
+}
+
+// ── FILL DEMO (1-click test) ──
+function fillDemo() {
+  setVal('q1', 8); setVal('q2', 7); setVal('q3', 9);
+  setVal('mids', 28);
+  setVal('finals', 34);
+  setVal('att', 80);
+  document.querySelectorAll('input').forEach(i => { validate(i, +i.max); });
+  calc();
+}
+
+function setVal(id, val) {
+  document.getElementById(id).value = val;
+}
+
+// ── RESET ──
+function resetAll() {
+  document.querySelectorAll('input').forEach(i => {
+    i.value = '';
+    i.classList.remove('valid','error');
+  });
+  document.querySelectorAll('.field-err').forEach(e => e.textContent = '');
+  calc();
+}
+
+// Init
+calc();
+</script>
+</body>
+</html>

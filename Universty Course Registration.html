@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>UniCourse — Course Registration Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:         #080d1a;
+  --surface:    #0c1428;
+  --glass:      rgba(14,22,48,0.72);
+  --glass-2:    rgba(22,36,72,0.55);
+  --border:     rgba(99,140,255,0.15);
+  --border-hi:  rgba(99,140,255,0.38);
+  --indigo:     #5b7fff;
+  --indigo-lt:  #8aaeff;
+  --sky:        #38bdf8;
+  --emerald:    #34d399;
+  --amber:      #fbbf24;
+  --rose:       #fb7185;
+  --text:       #e8eeff;
+  --muted:      #6878a8;
+  --display:    'Playfair Display', serif;
+  --body:       'Outfit', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── ANIMATED BACKGROUND ── */
+.bg-scene {
+  position: fixed; inset: 0; z-index: 0; overflow: hidden;
+}
+.bg-mesh {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(91,127,255,.14) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 80%, rgba(56,189,248,.10) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(52,211,153,.06) 0%, transparent 70%);
+}
+.bg-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(91,127,255,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(91,127,255,.05) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+/* floating orbs */
+.orb {
+  position: absolute; border-radius: 50%;
+  filter: blur(90px); opacity: .18; animation: drift 18s ease-in-out infinite alternate;
+}
+.orb-a { width:500px;height:500px; background:var(--indigo); top:-150px; left:-100px; animation-delay:0s; }
+.orb-b { width:380px;height:380px; background:var(--sky);    bottom:-80px; right:-80px;  animation-delay:-6s; }
+.orb-c { width:260px;height:260px; background:var(--emerald);top:40%;    left:55%;    animation-delay:-12s; }
+@keyframes drift {
+  from { transform: translate(0,0) scale(1); }
+  to   { transform: translate(30px, 40px) scale(1.08); }
+}
+
+/* ── LAYOUT ── */
+.wrap {
+  position: relative; z-index: 1;
+  max-width: 1160px; margin: auto; padding: 0 24px 80px;
+}
+
+/* ── HEADER ── */
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 40px 0 32px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 48px;
+}
+.logo { display: flex; align-items: center; gap: 16px; }
+.logo-mark {
+  width: 48px; height: 48px; border-radius: 14px;
+  background: linear-gradient(135deg, var(--indigo), var(--sky));
+  display: grid; place-items: center; font-size: 22px;
+  box-shadow: 0 8px 32px rgba(91,127,255,.35);
+}
+.logo-name {
+  font-family: var(--display); font-size: 22px; font-weight: 700;
+  letter-spacing: -.3px;
+}
+.logo-name span { color: var(--indigo-lt); }
+.header-pill {
+  font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--muted); border: 1px solid var(--border);
+  padding: 6px 18px; border-radius: 99px; font-weight: 500;
+}
+
+/* ── MAIN GRID ── */
+.main-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+/* ── GLASS CARD ── */
+.glass-card {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  overflow: hidden;
+}
+
+/* ── LEFT PANEL ── */
+.left-panel { display: flex; flex-direction: column; gap: 22px; }
+
+/* Selection card */
+.sel-card { padding: 28px 26px; }
+.card-heading {
+  font-family: var(--display); font-size: 17px; font-weight: 600;
+  margin-bottom: 22px; display: flex; align-items: center; gap: 10px;
+}
+.card-heading .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--indigo), var(--sky));
+  box-shadow: 0 0 8px var(--indigo);
+}
+
+.field { margin-bottom: 18px; }
+.field:last-of-type { margin-bottom: 24px; }
+label {
+  display: block; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 1.2px; color: var(--muted); font-weight: 500;
+  margin-bottom: 8px;
+}
+select {
+  width: 100%;
+  background: rgba(8,13,26,.7); border: 1px solid var(--border);
+  border-radius: 12px; padding: 13px 18px;
+  color: var(--text); font-family: var(--body); font-size: 14px; font-weight: 500;
+  outline: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236878a8' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 16px center;
+  cursor: pointer; transition: border-color .2s, box-shadow .2s;
+}
+select:focus { border-color: var(--indigo); box-shadow: 0 0 0 3px rgba(91,127,255,.18); }
+select option { background: #0f1830; }
+
+.btn-recommend {
+  width: 100%; padding: 15px; border-radius: 13px; border: none;
+  background: linear-gradient(135deg, var(--indigo), #3b6bff);
+  color: #fff; font-family: var(--body); font-size: 15px; font-weight: 600;
+  cursor: pointer; letter-spacing: .3px;
+  box-shadow: 0 8px 28px rgba(91,127,255,.30);
+  transition: transform .2s, box-shadow .2s, opacity .2s;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.btn-recommend:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(91,127,255,.42); }
+.btn-recommend:active { transform: translateY(0); }
+
+/* Prerequisite card */
+.prereq-card { padding: 26px 26px; }
+.prereq-list { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.prereq-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(8,13,26,.6); border: 1px solid var(--border);
+  border-radius: 10px; padding: 11px 14px;
+  font-size: 13px; transition: border-color .2s;
+}
+.prereq-row:hover { border-color: var(--border-hi); }
+.prereq-course { font-weight: 600; color: var(--text); }
+.prereq-arrow { color: var(--muted); font-size: 14px; margin: 0 8px; }
+.prereq-req { color: var(--indigo-lt); font-weight: 500; font-size: 12px; }
+
+/* ── RIGHT PANEL ── */
+.right-panel {}
+
+/* Dept info bar */
+.dept-bar {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  margin-bottom: 22px;
+}
+.dept-chip {
+  background: var(--glass-2); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px 14px; text-align: center;
+  cursor: pointer; transition: all .2s; position: relative; overflow: hidden;
+}
+.dept-chip::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  border-radius: 14px 14px 0 0; opacity: 0; transition: opacity .2s;
+}
+.dept-chip.cs::before  { background: var(--indigo); }
+.dept-chip.ee::before  { background: var(--sky);    }
+.dept-chip.me::before  { background: var(--emerald);}
+.dept-chip.bba::before { background: var(--amber);  }
+.dept-chip.active, .dept-chip:hover { border-color: var(--border-hi); transform: translateY(-2px); }
+.dept-chip.active::before { opacity: 1; }
+.dept-chip .chip-code { font-size: 18px; font-weight: 700; font-family: var(--display); margin-bottom: 4px; }
+.dept-chip.cs  .chip-code { color: var(--indigo);  }
+.dept-chip.ee  .chip-code { color: var(--sky);     }
+.dept-chip.me  .chip-code { color: var(--emerald); }
+.dept-chip.bba .chip-code { color: var(--amber);   }
+.dept-chip .chip-name { font-size: 10px; color: var(--muted); letter-spacing: .5px; text-transform: uppercase; }
+
+/* Recommendation output */
+.output-card { padding: 32px; min-height: 320px; display: flex; flex-direction: column; }
+.output-idle {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 14px;
+  color: var(--muted); text-align: center;
+}
+.idle-icon { font-size: 52px; opacity: .5; }
+.idle-title { font-family: var(--display); font-size: 20px; color: var(--muted); }
+.idle-sub { font-size: 13px; line-height: 1.6; max-width: 280px; }
+
+/* course result */
+.course-result { animation: slideUp .4s cubic-bezier(.16,1,.3,1); }
+@keyframes slideUp {
+  from { opacity:0; transform:translateY(22px); }
+  to   { opacity:1; transform:none; }
+}
+.result-meta {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 24px;
+}
+.sem-badge {
+  font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
+  padding: 5px 14px; border-radius: 99px; border: 1px solid;
+}
+.dept-badge {
+  font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  padding: 5px 14px; border-radius: 99px; background: rgba(91,127,255,.15);
+  color: var(--indigo-lt); border: 1px solid rgba(91,127,255,.3);
+}
+.course-name {
+  font-family: var(--display); font-size: 32px; font-weight: 700;
+  line-height: 1.2; margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--text) 30%, var(--indigo-lt));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.course-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 28px; }
+
+.stats-row { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
+.stat-box {
+  background: rgba(8,13,26,.7); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px 20px; flex: 1; min-width: 120px;
+}
+.stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin-bottom: 6px; }
+.stat-value { font-size: 22px; font-weight: 700; font-family: var(--display); }
+
+.prereq-alert {
+  display: flex; align-items: flex-start; gap: 14px;
+  background: rgba(251,191,36,.07); border: 1px solid rgba(251,191,36,.25);
+  border-radius: 14px; padding: 16px 18px; margin-bottom: 14px;
+}
+.alert-icon { font-size: 20px; flex-shrink: 0; }
+.alert-body {}
+.alert-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--amber); margin-bottom: 4px; }
+.alert-text  { font-size: 13px; color: var(--text); line-height: 1.5; }
+.alert-text strong { color: var(--amber); }
+
+.no-prereq {
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(52,211,153,.07); border: 1px solid rgba(52,211,153,.22);
+  border-radius: 14px; padding: 14px 18px;
+  font-size: 13px; color: var(--emerald); font-weight: 500;
+}
+
+/* semester progress strip */
+.sem-strip { margin-top: 22px; }
+.sem-strip-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 10px; }
+.sem-pips { display: flex; gap: 6px; }
+.pip {
+  flex: 1; height: 6px; border-radius: 99px;
+  background: var(--border); transition: background .3s;
+}
+.pip.done { background: linear-gradient(90deg, var(--indigo), var(--sky)); }
+.pip.current { background: var(--amber); box-shadow: 0 0 8px rgba(251,191,36,.5); }
+
+/* error state */
+.error-state {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px; text-align: center;
+  animation: slideUp .3s;
+}
+.error-icon { font-size: 42px; }
+.error-title { font-family: var(--display); font-size: 20px; color: var(--rose); }
+.error-sub { font-size: 13px; color: var(--muted); }
+
+/* ── SEMESTER GRID ── */
+.semester-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 24px;
+}
+.sem-mini {
+  background: var(--glass-2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px 10px; text-align: center;
+  cursor: pointer; transition: all .18s;
+}
+.sem-mini:hover { border-color: var(--border-hi); transform: translateY(-2px); }
+.sem-mini.active {
+  background: rgba(91,127,255,.15); border-color: var(--indigo);
+  box-shadow: 0 0 14px rgba(91,127,255,.18);
+}
+.sem-mini .sem-num { font-family: var(--display); font-size: 20px; font-weight: 700; color: var(--indigo-lt); }
+.sem-mini .sem-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-top: 2px; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+@media(max-width: 900px) {
+  .main-grid { grid-template-columns: 1fr; }
+  .dept-bar { grid-template-columns: repeat(2, 1fr); }
+  .semester-grid { grid-template-columns: repeat(4, 1fr); }
+  .course-name { font-size: 24px; }
+}
+@media(max-width: 520px) {
+  .dept-bar { grid-template-columns: repeat(2, 1fr); }
+  .stats-row { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-scene">
+  <div class="bg-mesh"></div>
+  <div class="bg-grid"></div>
+  <div class="orb orb-a"></div>
+  <div class="orb orb-b"></div>
+  <div class="orb orb-c"></div>
+</div>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-mark">🎓</div>
+      <div class="logo-name">Uni<span>Course</span></div>
+    </div>
+    <div class="header-pill">Course Registration Portal</div>
+  </header>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+
+    <!-- LEFT: Selection + Prerequisites -->
+    <div class="left-panel">
+
+      <!-- Selection -->
+      <div class="glass-card sel-card">
+        <div class="card-heading"><span class="dot"></span> Select Your Path</div>
+        <div class="field">
+          <label>Department</label>
+          <select id="sel-dept" onchange="onSelChange()">
+            <option value="">— Choose Department —</option>
+            <option value="CS">CS — Computer Science</option>
+            <option value="EE">EE — Electrical Engineering</option>
+            <option value="ME">ME — Mechanical Engineering</option>
+            <option value="BBA">BBA — Business Administration</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Semester</label>
+          <select id="sel-sem" onchange="onSelChange()">
+            <option value="">— Choose Semester —</option>
+            <option value="1">Semester 1</option>
+            <option value="2">Semester 2</option>
+            <option value="3">Semester 3</option>
+            <option value="4">Semester 4</option>
+            <option value="5">Semester 5</option>
+            <option value="6">Semester 6</option>
+            <option value="7">Semester 7</option>
+            <option value="8">Semester 8</option>
+          </select>
+        </div>
+        <button class="btn-recommend" onclick="recommend()">
+          <span>✦</span> Get Recommendation
+        </button>
+      </div>
+
+      <!-- Prerequisites -->
+      <div class="glass-card prereq-card">
+        <div class="card-heading"><span class="dot"></span> Prerequisites</div>
+        <div class="prereq-list" id="prereq-list"></div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Dept Chips + Output -->
+    <div class="right-panel">
+
+      <!-- Dept chips (visual, also clickable) -->
+      <div class="dept-bar" id="dept-bar">
+        <div class="dept-chip cs"  onclick="setDept('CS')" id="chip-CS">
+          <div class="chip-code">CS</div>
+          <div class="chip-name">Computer Science</div>
+        </div>
+        <div class="dept-chip ee"  onclick="setDept('EE')" id="chip-EE">
+          <div class="chip-code">EE</div>
+          <div class="chip-name">Electrical Eng.</div>
+        </div>
+        <div class="dept-chip me"  onclick="setDept('ME')" id="chip-ME">
+          <div class="chip-code">ME</div>
+          <div class="chip-name">Mechanical Eng.</div>
+        </div>
+        <div class="dept-chip bba" onclick="setDept('BBA')" id="chip-BBA">
+          <div class="chip-code">BBA</div>
+          <div class="chip-name">Business Admin.</div>
+        </div>
+      </div>
+
+      <!-- Output -->
+      <div class="glass-card output-card" id="output-card">
+        <div class="output-idle" id="idle-state">
+          <div class="idle-icon">📚</div>
+          <div class="idle-title">Select & Discover</div>
+          <div class="idle-sub">Choose your department and semester to get your personalized course recommendation.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+// ── C++ if-else logic → JS data structure ──
+// courses[DEPT][SEMESTER] = { name, credits, prereq (null if none) }
+const COURSES = {
+  CS: {
+    1: { name: "Programming Fundamentals", credits: 3, prereq: null,       code:"PF"    },
+    2: { name: "Object-Oriented Programming", credits: 4, prereq: "PF",    code:"OOP"   },
+    3: { name: "Data Structures & Algorithms", credits: 3, prereq: "PF",   code:"DSA"   },
+    4: { name: "Digital Logic Design", credits: 3, prereq: "Basic Electronics", code:"DLD" },
+    5: { name: "Computer Networks", credits: 3, prereq: null,              code:"CN"    },
+    6: { name: "Calculus", credits: 3, prereq: null,                       code:"CALC"  },
+    7: { name: "Discrete Mathematics", credits: 3, prereq: null,           code:"DM"    },
+    8: { name: "Final Year Project", credits: 5, prereq: null,             code:"FYP"   },
+  },
+  EE: {
+    1: { name: "Electronics Fundamentals", credits: 3, prereq: null,       code:"EF"    },
+    2: { name: "Basic Electronics", credits: 4, prereq: null,              code:"BE"    },
+    3: { name: "Wire Combinations", credits: 3, prereq: "Basic Electronics",code:"WC"  },
+    4: { name: "Digital Logic Design", credits: 3, prereq: "Basic Electronics", code:"DLD" },
+    5: { name: "Computer Networks", credits: 3, prereq: null,              code:"CN"    },
+    6: { name: "Calculus", credits: 3, prereq: null,                       code:"CALC"  },
+    7: { name: "Discrete Mathematics", credits: 3, prereq: null,           code:"DM"    },
+    8: { name: "Final Year Project", credits: 5, prereq: null,             code:"FYP"   },
+  },
+  ME: {
+    1: { name: "Engineering Drawing", credits: 3, prereq: null,            code:"ED"    },
+    2: { name: "Material Science", credits: 4, prereq: null,               code:"MS"    },
+    3: { name: "Thermodynamics", credits: 3, prereq: "Physics 1",          code:"THERMO"},
+    4: { name: "Digital Logic Design", credits: 3, prereq: null,           code:"DLD"   },
+    5: { name: "Fluid Mechanics", credits: 3, prereq: null,                code:"FM"    },
+    6: { name: "Calculus", credits: 3, prereq: null,                       code:"CALC"  },
+    7: { name: "Differential Equations", credits: 3, prereq: null,         code:"DE"    },
+    8: { name: "Final Year Project", credits: 5, prereq: null,             code:"FYP"   },
+  },
+  BBA: {
+    1: { name: "Principles of Management", credits: 3, prereq: null,       code:"PM"    },
+    2: { name: "Business Management", credits: 4, prereq: "Principles of Management", code:"BM" },
+    3: { name: "Financial Accounting", credits: 3, prereq: "Principles of Management", code:"FA" },
+    4: { name: "Business Communications", credits: 3, prereq: null,        code:"BC"    },
+    5: { name: "Business Law", credits: 3, prereq: null,                   code:"BL"    },
+    6: { name: "Calculus", credits: 3, prereq: null,                       code:"CALC"  },
+    7: { name: "Principles of Finance", credits: 3, prereq: null,          code:"POF"   },
+    8: { name: "Final Year Project", credits: 5, prereq: null,             code:"FYP"   },
+  }
+};
+
+// Prerequisites master list (mirrors C++ output)
+const PREREQS = [
+  { course:"OOP",                  req:"Programming Fundamentals (PF)"  },
+  { course:"DSA",                  req:"Programming Fundamentals (PF)"  },
+  { course:"DLD",                  req:"Basic Electronics"               },
+  { course:"Thermodynamics",       req:"Physics 1"                       },
+  { course:"Financial Accounting", req:"Principles of Management"        },
+  { course:"Business Management",  req:"Principles of Management"        },
+];
+
+// Department color tokens
+const DEPT_COLORS = {
+  CS:  { badge:'rgba(91,127,255,.18)',  border:'rgba(91,127,255,.5)',  text:'#8aaeff' },
+  EE:  { badge:'rgba(56,189,248,.15)',  border:'rgba(56,189,248,.45)', text:'#7dd3fc' },
+  ME:  { badge:'rgba(52,211,153,.14)',  border:'rgba(52,211,153,.4)',  text:'#6ee7b7' },
+  BBA: { badge:'rgba(251,191,36,.14)',  border:'rgba(251,191,36,.4)',  text:'#fcd34d' },
+};
+
+const DEPT_FULL = {
+  CS:'Computer Science', EE:'Electrical Engineering',
+  ME:'Mechanical Engineering', BBA:'Business Administration'
+};
+
+// ── BUILD PREREQ LIST ──
+(function buildPrereqs(){
+  const el = document.getElementById('prereq-list');
+  el.innerHTML = PREREQS.map(p => `
+    <div class="prereq-row">
+      <span class="prereq-course">${p.course}</span>
+      <span class="prereq-arrow">➜</span>
+      <span class="prereq-req">${p.req}</span>
+    </div>`).join('');
+})();
+
+// ── SET DEPT FROM CHIP ──
+function setDept(code) {
+  document.getElementById('sel-dept').value = code;
+  updateChips(code);
+  onSelChange();
+}
+
+function updateChips(code) {
+  document.querySelectorAll('.dept-chip').forEach(c => c.classList.remove('active'));
+  const chip = document.getElementById('chip-' + code);
+  if (chip) chip.classList.add('active');
+}
+
+function onSelChange() {
+  const dept = document.getElementById('sel-dept').value;
+  updateChips(dept);
+}
+
+// ── RECOMMEND ──
+function recommend() {
+  const dept = document.getElementById('sel-dept').value;
+  const sem  = parseInt(document.getElementById('sel-sem').value);
+  const out  = document.getElementById('output-card');
+
+  // Validation
+  if (!dept || !sem) {
+    out.innerHTML = `
+      <div class="error-state">
+        <div class="error-icon">⚠️</div>
+        <div class="error-title">Incomplete Selection</div>
+        <div class="error-sub">Please select both a department and a semester to continue.</div>
+      </div>`;
+    return;
+  }
+
+  const data = COURSES[dept]?.[sem];
+  if (!data) {
+    out.innerHTML = `
+      <div class="error-state">
+        <div class="error-icon">🚫</div>
+        <div class="error-title">Invalid Selection</div>
+        <div class="error-sub">No course found for ${dept} — Semester ${sem}.</div>
+      </div>`;
+    return;
+  }
+
+  const col = DEPT_COLORS[dept];
+  const prereqBlock = data.prereq
+    ? `<div class="prereq-alert">
+         <div class="alert-icon">⚠️</div>
+         <div class="alert-body">
+           <div class="alert-title">Prerequisite Required</div>
+           <div class="alert-text">You must have completed <strong>${data.prereq}</strong> before enrolling in this course.</div>
+         </div>
+       </div>`
+    : `<div class="no-prereq">✅ No prerequisites — open to all eligible students.</div>`;
+
+  // Semester progress pips
+  const pips = Array.from({length:8}, (_,i) => {
+    const cls = i+1 < sem ? 'done' : i+1 === sem ? 'current' : '';
+    return `<div class="pip ${cls}"></div>`;
+  }).join('');
+
+  out.innerHTML = `
+    <div class="course-result">
+      <div class="result-meta">
+        <span class="dept-badge" style="background:${col.badge};color:${col.text};border-color:${col.border}">${dept} · ${DEPT_FULL[dept]}</span>
+        <span class="sem-badge" style="background:rgba(251,191,36,.12);color:#fcd34d;border-color:rgba(251,191,36,.35)">Semester ${sem}</span>
+      </div>
+      <div class="course-name">${data.name}</div>
+      <div class="course-desc">Recommended course for ${DEPT_FULL[dept]} students in their ${ordinal(sem)} semester.</div>
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-label">Credit Hours</div>
+          <div class="stat-value" style="color:${col.text}">${data.credits}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Course Code</div>
+          <div class="stat-value" style="color:${col.text}">${data.code}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Semester</div>
+          <div class="stat-value" style="color:var(--amber)">${sem} / 8</div>
+        </div>
+      </div>
+      ${prereqBlock}
+      <div class="sem-strip">
+        <div class="sem-strip-label">Academic Progress</div>
+        <div class="sem-pips">${pips}</div>
+      </div>
+    </div>`;
+}
+
+function ordinal(n) {
+  const s = ['th','st','nd','rd'], v = n%100;
+  return n + (s[(v-20)%10] || s[v] || s[0]);
+}
+</script>
+</body>
+</html>

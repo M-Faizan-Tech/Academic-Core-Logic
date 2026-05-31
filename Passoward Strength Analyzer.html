@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Password Strength Analyzer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0c12;
+      --surface: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.08);
+      --border-hover: rgba(255,255,255,0.18);
+      --text: #e8eaf0;
+      --muted: #6b7280;
+      --accent: #38bdf8;
+
+      --weak:      #ef4444;
+      --medium:    #f97316;
+      --strong:    #eab308;
+      --vstrong:   #22c55e;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Outfit', sans-serif;
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* ── Animated background grid ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Glowing orbs ── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      pointer-events: none;
+      z-index: 0;
+      animation: drift 12s ease-in-out infinite alternate;
+    }
+    .orb-1 {
+      width: 420px; height: 420px;
+      background: radial-gradient(circle, rgba(56,189,248,0.12), transparent 70%);
+      top: -120px; left: -100px;
+      animation-delay: 0s;
+    }
+    .orb-2 {
+      width: 340px; height: 340px;
+      background: radial-gradient(circle, rgba(139,92,246,0.10), transparent 70%);
+      bottom: -80px; right: -60px;
+      animation-delay: -6s;
+    }
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(30px, 20px) scale(1.05); }
+    }
+
+    /* ── Card ── */
+    .card {
+      position: relative; z-index: 1;
+      width: min(440px, 92vw);
+      background: rgba(255,255,255,0.035);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px 36px 36px;
+      box-shadow:
+        0 0 0 1px rgba(56,189,248,0.04),
+        0 32px 64px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(255,255,255,0.07);
+      animation: slideUp .55s cubic-bezier(.22,.87,.36,1) both;
+    }
+    @keyframes slideUp {
+      from { opacity:0; transform: translateY(28px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+
+    /* ── Header ── */
+    .header { text-align: center; margin-bottom: 32px; }
+    .lock-icon {
+      width: 52px; height: 52px;
+      background: linear-gradient(135deg, rgba(56,189,248,0.15), rgba(139,92,246,0.15));
+      border: 1px solid rgba(56,189,248,0.2);
+      border-radius: 14px;
+      display: grid; place-items: center;
+      margin: 0 auto 16px;
+      font-size: 22px;
+      box-shadow: 0 0 20px rgba(56,189,248,0.1);
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #e8eaf0 30%, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 4px;
+      font-weight: 300;
+      letter-spacing: 0.02em;
+    }
+
+    /* ── Input ── */
+    .input-wrap {
+      position: relative;
+      margin-bottom: 28px;
+    }
+    label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .field {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      padding: 14px 48px 14px 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1rem;
+      letter-spacing: 0.05em;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+      caret-color: var(--accent);
+    }
+    input::placeholder { color: rgba(255,255,255,0.18); font-family: 'Outfit', sans-serif; letter-spacing: 0; }
+    input:focus {
+      border-color: rgba(56,189,248,0.4);
+      background: rgba(255,255,255,0.07);
+      box-shadow: 0 0 0 3px rgba(56,189,248,0.08), 0 0 20px rgba(56,189,248,0.06);
+    }
+    .eye-btn {
+      position: absolute; right: 14px;
+      background: none; border: none; cursor: pointer;
+      color: var(--muted);
+      display: grid; place-items: center;
+      padding: 4px;
+      transition: color .2s;
+    }
+    .eye-btn:hover { color: var(--text); }
+    .eye-btn svg { width: 18px; height: 18px; }
+
+    /* ── Strength bar ── */
+    .strength-section { margin-bottom: 28px; }
+    .strength-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 10px;
+    }
+    .strength-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .strength-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--muted);
+      transition: all .3s ease;
+    }
+    .strength-badge.weak    { color: var(--weak);   border-color: rgba(239,68,68,.3);   background: rgba(239,68,68,.08); }
+    .strength-badge.medium  { color: var(--medium); border-color: rgba(249,115,22,.3);  background: rgba(249,115,22,.08); }
+    .strength-badge.strong  { color: var(--strong); border-color: rgba(234,179,8,.3);   background: rgba(234,179,8,.08); }
+    .strength-badge.vstrong { color: var(--vstrong);border-color: rgba(34,197,94,.3);   background: rgba(34,197,94,.08); }
+
+    .bar-track {
+      height: 6px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      width: 0%;
+      transition: width .45s cubic-bezier(.4,0,.2,1), background .4s ease;
+      background: var(--muted);
+      position: relative;
+    }
+    .bar-fill::after {
+      content: '';
+      position: absolute; inset: 0;
+      border-radius: 99px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25));
+    }
+    .bar-fill.weak    { background: var(--weak); }
+    .bar-fill.medium  { background: linear-gradient(90deg, var(--weak), var(--medium)); }
+    .bar-fill.strong  { background: linear-gradient(90deg, var(--medium), var(--strong)); }
+    .bar-fill.vstrong { background: linear-gradient(90deg, var(--strong), var(--vstrong)); }
+
+    /* ── Stats grid ── */
+    .stats-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+    .stat-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 6px 10px;
+      text-align: center;
+      transition: border-color .3s, background .3s, transform .2s;
+    }
+    .stat-card.active {
+      border-color: rgba(56,189,248,0.25);
+      background: rgba(56,189,248,0.06);
+      transform: translateY(-2px);
+    }
+    .stat-num {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.3rem;
+      font-weight: 400;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 5px;
+      transition: color .3s;
+    }
+    .stat-card.active .stat-num { color: var(--accent); }
+    .stat-name {
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      line-height: 1.2;
+    }
+
+    /* ── Criteria checklist ── */
+    .criteria {
+      margin-top: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .criterion {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      transition: color .3s;
+    }
+    .criterion.met { color: var(--text); }
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;
+      transition: background .3s, border-color .3s, box-shadow .3s;
+    }
+    .criterion.met .dot {
+      background: var(--vstrong);
+      border-color: var(--vstrong);
+      box-shadow: 0 0 6px rgba(34,197,94,.5);
+    }
+  </style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="card">
+  <div class="header">
+    <div class="lock-icon">🔐</div>
+    <h1>Password Analyzer</h1>
+    <p class="subtitle">Real-time strength detection</p>
+  </div>
+
+  <div class="input-wrap">
+    <label for="pwd">Enter Password</label>
+    <div class="field">
+      <input type="password" id="pwd" placeholder="Type your password…" autocomplete="off" spellcheck="false"/>
+      <button class="eye-btn" id="eyeBtn" aria-label="Toggle visibility">
+        <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="strength-section">
+    <div class="strength-header">
+      <span class="strength-label">Strength</span>
+      <span class="strength-badge" id="strengthBadge">—</span>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill" id="barFill"></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="stats-label">Character Breakdown</div>
+    <div class="stats-grid">
+      <div class="stat-card" id="sc-total">
+        <div class="stat-num" id="sn-total">0</div>
+        <div class="stat-name">Total</div>
+      </div>
+      <div class="stat-card" id="sc-upper">
+        <div class="stat-num" id="sn-upper">0</div>
+        <div class="stat-name">Upper</div>
+      </div>
+      <div class="stat-card" id="sc-lower">
+        <div class="stat-num" id="sn-lower">0</div>
+        <div class="stat-name">Lower</div>
+      </div>
+      <div class="stat-card" id="sc-num">
+        <div class="stat-num" id="sn-num">0</div>
+        <div class="stat-name">Numbers</div>
+      </div>
+      <div class="stat-card" id="sc-spec">
+        <div class="stat-num" id="sn-spec">0</div>
+        <div class="stat-name">Special</div>
+      </div>
+    </div>
+
+    <div class="criteria">
+      <div class="criterion" id="cr-length">
+        <span class="dot"></span>At least 8 characters
+      </div>
+      <div class="criterion" id="cr-upper">
+        <span class="dot"></span>Contains uppercase letter
+      </div>
+      <div class="criterion" id="cr-lower">
+        <span class="dot"></span>Contains lowercase letter
+      </div>
+      <div class="criterion" id="cr-num">
+        <span class="dot"></span>Contains number
+      </div>
+      <div class="criterion" id="cr-spec">
+        <span class="dot"></span>Contains special character
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const input     = document.getElementById('pwd');
+  const eyeBtn    = document.getElementById('eyeBtn');
+  const eyeIcon   = document.getElementById('eyeIcon');
+  const barFill   = document.getElementById('barFill');
+  const badge     = document.getElementById('strengthBadge');
+
+  const snTotal = document.getElementById('sn-total');
+  const snUpper = document.getElementById('sn-upper');
+  const snLower = document.getElementById('sn-lower');
+  const snNum   = document.getElementById('sn-num');
+  const snSpec  = document.getElementById('sn-spec');
+
+  const scTotal = document.getElementById('sc-total');
+  const scUpper = document.getElementById('sc-upper');
+  const scLower = document.getElementById('sc-lower');
+  const scNum   = document.getElementById('sc-num');
+  const scSpec  = document.getElementById('sc-spec');
+
+  const crLength = document.getElementById('cr-length');
+  const crUpper  = document.getElementById('cr-upper');
+  const crLower  = document.getElementById('cr-lower');
+  const crNum    = document.getElementById('cr-num');
+  const crSpec   = document.getElementById('cr-spec');
+
+  // Eye icon SVGs
+  const eyeOpen   = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+  const eyeClosed = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>`;
+
+  eyeBtn.addEventListener('click', () => {
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    eyeIcon.innerHTML = showing ? eyeOpen : eyeClosed;
+  });
+
+  function toggle(el, on) {
+    on ? el.classList.add('active') : el.classList.remove('active');
+  }
+  function met(el, on) {
+    on ? el.classList.add('met') : el.classList.remove('met');
+  }
+
+  input.addEventListener('input', () => {
+    const pwd = input.value;
+    let ucase = 0, lcase = 0, number = 0, special = 0;
+    const total = pwd.length;
+
+    // ── Exact C++ logic ported to JS ──
+    for (let i = 0; i < total; i++) {
+      const ch = pwd[i];
+      if      (ch >= 'A' && ch <= 'Z') ucase++;
+      else if (ch >= 'a' && ch <= 'z') lcase++;
+      else if (ch >= '0' && ch <= '9') number++;
+      else                              special++;
+    }
+
+    let typeCount = 0;
+    if (ucase   > 0) typeCount++;
+    if (lcase   > 0) typeCount++;
+    if (number  > 0) typeCount++;
+    if (special > 0) typeCount++;
+
+    // Strength determination (exact C++ logic)
+    let level = 'none';
+    if (total === 0) {
+      level = 'none';
+    } else if (total < 8 || typeCount === 1) {
+      level = 'weak';
+    } else if (total >= 8 && typeCount === 2) {
+      level = 'medium';
+    } else if (total >= 8 && typeCount === 3) {
+      level = 'strong';
+    } else if (total >= 12 && typeCount === 4) {
+      level = 'vstrong';
+    } else if (total >= 8 && typeCount === 4) {
+      // 8–11 chars with all 4 types → treat as STRONG (between strong and vstrong)
+      level = 'strong';
+    }
+
+    // Update stat numbers
+    snTotal.textContent = total;
+    snUpper.textContent = ucase;
+    snLower.textContent = lcase;
+    snNum.textContent   = number;
+    snSpec.textContent  = special;
+
+    // Highlight active stat cards
+    toggle(scTotal, total   > 0);
+    toggle(scUpper, ucase   > 0);
+    toggle(scLower, lcase   > 0);
+    toggle(scNum,   number  > 0);
+    toggle(scSpec,  special > 0);
+
+    // Criteria
+    met(crLength, total   >= 8);
+    met(crUpper,  ucase   > 0);
+    met(crLower,  lcase   > 0);
+    met(crNum,    number  > 0);
+    met(crSpec,   special > 0);
+
+    // Bar + badge
+    const classes  = ['weak','medium','strong','vstrong'];
+    const widths   = { none: '0%', weak: '25%', medium: '50%', strong: '75%', vstrong: '100%' };
+    const labels   = { none: '—', weak: 'Weak', medium: 'Medium', strong: 'Strong', vstrong: 'Very Strong' };
+
+    barFill.className = 'bar-fill' + (level !== 'none' ? ' ' + level : '');
+    barFill.style.width = widths[level];
+    badge.className = 'strength-badge' + (level !== 'none' ? ' ' + level : '');
+    badge.textContent = labels[level];
+  });
+</script>
+</body>
+</html>

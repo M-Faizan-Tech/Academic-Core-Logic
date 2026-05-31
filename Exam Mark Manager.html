@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ExamIQ — Cyber Analytics Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0c0e1a;
+  --surface:   #11142000;
+  --card:      #141826;
+  --card2:     #0f1220;
+  --border:    rgba(255,255,255,0.07);
+  --blue:      #2b7fff;
+  --blue-dim:  rgba(43,127,255,0.18);
+  --blue-glow: rgba(43,127,255,0.35);
+  --violet:    #8b5cf6;
+  --violet-dim:rgba(139,92,246,0.18);
+  --violet-glow:rgba(139,92,246,0.35);
+  --cyan:      #06b6d4;
+  --green:     #10b981;
+  --red:       #ef4444;
+  --amber:     #f59e0b;
+  --text:      #e2e8f0;
+  --muted:     #64748b;
+  --dimmed:    #374151;
+  --font-head: 'Syne', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-head);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ── MESH BACKGROUND ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(43,127,255,0.09) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 90% 10%, rgba(139,92,246,0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 40% at 50% 100%, rgba(6,182,212,0.05) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* subtle dot grid */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 36px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--blue), var(--violet));
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 1.1rem;
+  box-shadow: 0 0 20px var(--blue-glow);
+}
+
+.logo-text {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(90deg, #fff 30%, var(--blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.logo-sub {
+  font-size: 0.62rem;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  letter-spacing: 0.15em;
+  margin-top: 1px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chip {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+
+.chip-live {
+  border-color: rgba(16,185,129,0.3);
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.chip-live::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: pulse 2s ease infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+
+/* ── SECTION LABEL ── */
+.sec-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--blue);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sec-label::before {
+  content: '';
+  width: 16px; height: 1px;
+  background: var(--blue);
+  box-shadow: 0 0 6px var(--blue);
+}
+
+/* ── CARDS BASE ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.card:hover {
+  border-color: rgba(43,127,255,0.25);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+}
+
+/* ── INPUT SECTION ── */
+.input-card { padding: 28px; margin-bottom: 24px; }
+
+.input-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+.card-desc {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.input-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.input-field {
+  position: relative;
+}
+
+.input-field label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  margin-bottom: 6px;
+  transition: color 0.2s;
+}
+
+.input-field:focus-within label {
+  color: var(--blue);
+}
+
+.input-field input {
+  width: 100%;
+  background: var(--card2);
+  border: 1px solid var(--dimmed);
+  border-radius: 10px;
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 10px 14px 10px 38px;
+  outline: none;
+  transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+  -moz-appearance: textfield;
+}
+.input-field input::-webkit-outer-spin-button,
+.input-field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+.input-field input:focus {
+  border-color: var(--blue);
+  background: rgba(43,127,255,0.05);
+  box-shadow: 0 0 0 3px rgba(43,127,255,0.12), 0 0 20px rgba(43,127,255,0.08);
+}
+
+.input-field input.valid {
+  border-color: rgba(16,185,129,0.5);
+}
+.input-field input.invalid {
+  border-color: rgba(239,68,68,0.6);
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
+}
+
+.input-field .prefix {
+  position: absolute;
+  left: 12px;
+  bottom: 11px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--muted);
+  pointer-events: none;
+  transition: color 0.2s;
+}
+.input-field:focus-within .prefix { color: var(--blue); }
+
+.input-field .suffix-badge {
+  position: absolute;
+  right: 10px;
+  bottom: 9px;
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  color: var(--muted);
+  background: var(--dimmed);
+  padding: 1px 5px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* ── BUTTONS ── */
+.btn-row { display: flex; gap: 12px; flex-wrap: wrap; }
+
+.btn {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  padding: 11px 22px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0);
+  transition: background 0.15s;
+}
+.btn:hover::after { background: rgba(255,255,255,0.06); }
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--blue) 0%, #1d4ed8 100%);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(43,127,255,0.35);
+}
+.btn-primary:hover {
+  box-shadow: 0 6px 28px rgba(43,127,255,0.55);
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background: rgba(139,92,246,0.12);
+  color: var(--violet);
+  border: 1px solid rgba(139,92,246,0.25);
+}
+.btn-ghost:hover {
+  background: rgba(139,92,246,0.2);
+  border-color: rgba(139,92,246,0.5);
+  box-shadow: 0 0 20px rgba(139,92,246,0.2);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--dimmed);
+}
+.btn-outline:hover {
+  border-color: rgba(255,255,255,0.2);
+  color: #fff;
+}
+
+/* ── ANALYTICS GRID ── */
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 600px) {
+  .analytics-grid { grid-template-columns: 1fr; }
+}
+
+/* ── METRIC CARD ── */
+.metric-card {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 140px;
+}
+
+.metric-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.metric-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--muted);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.metric-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 0.9rem;
+}
+
+.metric-value {
+  font-size: 2.6rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  transition: all 0.3s;
+}
+
+.metric-sub {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--muted);
+}
+
+/* Max card */
+.card-max .metric-icon { background: rgba(43,127,255,0.15); }
+.card-max .metric-value { color: var(--blue); text-shadow: 0 0 30px rgba(43,127,255,0.4); }
+.card-max { box-shadow: inset 0 -1px 0 0 rgba(43,127,255,0.1); }
+
+/* Min card */
+.card-min .metric-icon { background: rgba(139,92,246,0.15); }
+.card-min .metric-value { color: var(--violet); text-shadow: 0 0 30px rgba(139,92,246,0.4); }
+
+/* Avg card */
+.card-avg .metric-icon { background: rgba(6,182,212,0.15); }
+.card-avg .metric-value { color: var(--cyan); text-shadow: 0 0 30px rgba(6,182,212,0.4); }
+
+/* Pass/Fail card */
+.card-pf { padding: 22px; min-height: 140px; }
+
+.pf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.pf-values {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 12px;
+}
+.pf-item { flex: 1; }
+.pf-num {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.pf-lbl {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  margin-top: 3px;
+}
+.pf-pass .pf-num { color: var(--green); text-shadow: 0 0 20px rgba(16,185,129,0.4); }
+.pf-fail .pf-num { color: var(--red); text-shadow: 0 0 20px rgba(239,68,68,0.4); }
+
+.progress-bar-track {
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 99px;
+  overflow: hidden;
+  display: flex;
+  gap: 2px;
+}
+.progress-bar-pass {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), #34d399);
+  border-radius: 99px;
+  transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 0 8px rgba(16,185,129,0.5);
+}
+.progress-bar-fail {
+  height: 100%;
+  background: linear-gradient(90deg, var(--red), #f87171);
+  border-radius: 99px;
+  transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 0 8px rgba(239,68,68,0.5);
+  flex-shrink: 0;
+}
+
+/* ── ABOVE AVERAGE PANEL ── */
+.above-card { padding: 28px; }
+
+.above-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.above-count-badge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(43,127,255,0.12);
+  border: 1px solid rgba(43,127,255,0.25);
+  color: var(--blue);
+}
+
+.above-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 56px;
+  align-items: flex-start;
+  align-content: flex-start;
+}
+
+.above-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 8px 10px;
+  border-radius: 10px;
+  background: rgba(43,127,255,0.08);
+  border: 1px solid rgba(43,127,255,0.2);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #fff;
+  animation: badgePop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  opacity: 0;
+  cursor: default;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+.above-badge:hover {
+  background: rgba(43,127,255,0.15);
+  border-color: rgba(43,127,255,0.45);
+  box-shadow: 0 4px 20px rgba(43,127,255,0.2);
+  transform: translateY(-2px);
+}
+
+@keyframes badgePop {
+  from { opacity:0; transform: scale(0.8) translateY(6px); }
+  to   { opacity:1; transform: scale(1) translateY(0); }
+}
+
+.badge-roll {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--blue);
+  background: rgba(43,127,255,0.15);
+  padding: 2px 7px;
+  border-radius: 5px;
+  letter-spacing: 0.1em;
+}
+
+.badge-score {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.badge-arrow {
+  font-size: 0.6rem;
+  color: var(--green);
+  margin-left: 2px;
+}
+
+.above-empty {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--dimmed);
+  padding: 16px 0;
+  letter-spacing: 0.05em;
+}
+
+/* ── BOTTOM BAR ── */
+.bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding: 14px 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.02);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bottom-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--muted);
+}
+.bottom-stat span { color: var(--text); font-weight: 500; }
+
+/* ── NUMBER ANIMATION ── */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.count-anim { animation: countUp 0.35s ease forwards; }
+
+/* ── VALIDATION ERROR ── */
+.val-error {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--red);
+  margin-top: -10px;
+  margin-bottom: 8px;
+  display: none;
+  padding: 7px 12px;
+  background: rgba(239,68,68,0.08);
+  border-radius: 7px;
+  border: 1px solid rgba(239,68,68,0.2);
+  animation: fadeIn 0.2s ease;
+}
+.val-error.show { display: block; }
+
+@keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── DIVIDER ── */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 6px 0 22px;
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-icon">📊</div>
+      <div>
+        <div class="logo-text">ExamIQ</div>
+        <div class="logo-sub">MARKS ANALYTICS PLATFORM v2.0</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="chip">10 STUDENTS</div>
+      <div class="chip">THRESHOLD: 50</div>
+      <div class="chip chip-live">LIVE</div>
+    </div>
+  </div>
+
+  <!-- INPUT CARD -->
+  <div class="card input-card">
+    <div class="input-card-header">
+      <div>
+        <div class="sec-label">01 — DATA ENTRY</div>
+        <div class="card-title">Student Marks Input</div>
+        <div class="card-desc">// arr[10] — enter values 0–100 per student</div>
+      </div>
+    </div>
+
+    <div class="input-grid" id="inputGrid"></div>
+
+    <div class="val-error" id="valError">⚠ Invalid input detected — all 10 fields must be filled with values between 0 and 100.</div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="runAnalysis()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Run Analytics
+      </button>
+      <button class="btn btn-ghost" onclick="smartGenerate()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Generate Smart Analytics
+      </button>
+      <button class="btn btn-outline" onclick="clearAll()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        Clear
+      </button>
+    </div>
+  </div>
+
+  <!-- ANALYTICS WIDGETS -->
+  <div class="sec-label">02 — PERFORMANCE REGISTERS</div>
+  <div class="divider"></div>
+
+  <div class="analytics-grid">
+
+    <!-- MAX -->
+    <div class="card metric-card card-max">
+      <div class="metric-header">
+        <div class="metric-label">Top Scorer</div>
+        <div class="metric-icon">🏆</div>
+      </div>
+      <div class="metric-value" id="maxVal">—</div>
+      <div class="metric-sub" id="maxSub">Awaiting data input...</div>
+    </div>
+
+    <!-- MIN -->
+    <div class="card metric-card card-min">
+      <div class="metric-header">
+        <div class="metric-label">Lowest Score</div>
+        <div class="metric-icon">📉</div>
+      </div>
+      <div class="metric-value" id="minVal">—</div>
+      <div class="metric-sub" id="minSub">Awaiting data input...</div>
+    </div>
+
+    <!-- AVG -->
+    <div class="card metric-card card-avg">
+      <div class="metric-header">
+        <div class="metric-label">Class Average</div>
+        <div class="metric-icon">⚡</div>
+      </div>
+      <div class="metric-value" id="avgVal">—</div>
+      <div class="metric-sub" id="avgSub">Integer avg (Σ÷10)</div>
+    </div>
+
+    <!-- PASS / FAIL -->
+    <div class="card card-pf">
+      <div class="pf-header">
+        <div class="metric-label">Class Status</div>
+        <div class="metric-icon" style="background:rgba(16,185,129,0.12)">📋</div>
+      </div>
+      <div class="pf-values">
+        <div class="pf-item pf-pass">
+          <div class="pf-num" id="passVal">—</div>
+          <div class="pf-lbl">PASSED (≥50)</div>
+        </div>
+        <div class="pf-item pf-fail">
+          <div class="pf-num" id="failVal">—</div>
+          <div class="pf-lbl">FAILED (&lt;50)</div>
+        </div>
+      </div>
+      <div class="progress-bar-track">
+        <div class="progress-bar-pass" id="passBar" style="width:0%"></div>
+        <div class="progress-bar-fail" id="failBar" style="width:0%"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ABOVE AVERAGE PANEL -->
+  <div class="sec-label">03 — ELITE PERFORMANCE</div>
+  <div class="divider"></div>
+
+  <div class="card above-card">
+    <div class="above-header">
+      <div>
+        <div class="card-title">Above Class Average</div>
+        <div class="card-desc">// Students where arr[i] > avg — C++ loop condition</div>
+      </div>
+      <div class="above-count-badge" id="aboveCountBadge">0 students</div>
+    </div>
+    <div class="above-grid" id="aboveGrid">
+      <div class="above-empty">// Run analytics to populate elite performance list...</div>
+    </div>
+  </div>
+
+  <!-- BOTTOM BAR -->
+  <div class="bottom-bar">
+    <div class="bottom-stat">Array Size: <span>int arr[10]</span></div>
+    <div class="bottom-stat">Pass Threshold: <span>marks ≥ 50</span></div>
+    <div class="bottom-stat">Avg Mode: <span>int avg = sum/10</span></div>
+    <div class="bottom-stat" id="sumStat">Σ Sum: <span>—</span></div>
+    <div class="bottom-stat" id="clockStat">Time: <span id="clockVal">—</span></div>
+  </div>
+
+</div>
+
+<script>
+// ── Clock ──
+function tick() {
+  document.getElementById('clockVal').textContent = new Date().toLocaleTimeString();
+}
+tick(); setInterval(tick, 1000);
+
+// ── Build Inputs ──
+const grid = document.getElementById('inputGrid');
+for (let i = 0; i < 10; i++) {
+  const f = document.createElement('div');
+  f.className = 'input-field';
+  f.innerHTML = `
+    <label for="m${i}">ROLL_${String(i+1).padStart(2,'0')} // MARKS</label>
+    <span class="prefix">#</span>
+    <input
+      type="number" id="m${i}"
+      min="0" max="100"
+      placeholder="00"
+      oninput="liveValidate(this)"
+    />
+    <span class="suffix-badge">/100</span>
+  `;
+  grid.appendChild(f);
+}
+
+// ── Live Validation ──
+function liveValidate(el) {
+  const v = parseFloat(el.value);
+  if (el.value === '') {
+    el.className = 'mark-input';
+  } else if (isNaN(v) || v < 0 || v > 100) {
+    el.classList.add('invalid');
+    el.classList.remove('valid');
+    if (v > 100) el.value = 100;
+    if (v < 0) el.value = 0;
+  } else {
+    el.classList.add('valid');
+    el.classList.remove('invalid');
+  }
+}
+
+// ── Smart Generate (mock data) ──
+function smartGenerate() {
+  const presets = [72, 88, 45, 63, 91, 37, 55, 79, 48, 66];
+  for (let i = 0; i < 10; i++) {
+    const el = document.getElementById(`m${i}`);
+    el.value = presets[i];
+    liveValidate(el);
+  }
+  document.getElementById('valError').classList.remove('show');
+  runAnalysis();
+}
+
+// ── Clear ──
+function clearAll() {
+  for (let i = 0; i < 10; i++) {
+    const el = document.getElementById(`m${i}`);
+    el.value = '';
+    el.classList.remove('valid','invalid');
+  }
+  document.getElementById('valError').classList.remove('show');
+  // Reset widgets
+  setMetric('maxVal','—'); setMetric('minVal','—'); setMetric('avgVal','—');
+  setMetric('passVal','—'); setMetric('failVal','—');
+  document.getElementById('passBar').style.width = '0%';
+  document.getElementById('failBar').style.width = '0%';
+  document.getElementById('maxSub').textContent = 'Awaiting data input...';
+  document.getElementById('minSub').textContent = 'Awaiting data input...';
+  document.getElementById('avgSub').textContent = 'Integer avg (Σ÷10)';
+  document.getElementById('aboveGrid').innerHTML = '<div class="above-empty">// Run analytics to populate elite performance list...</div>';
+  document.getElementById('aboveCountBadge').textContent = '0 students';
+  document.getElementById('sumStat').innerHTML = 'Σ Sum: <span>—</span>';
+}
+
+// ── Animated number setter ──
+function setMetric(id, val) {
+  const el = document.getElementById(id);
+  el.classList.remove('count-anim');
+  void el.offsetWidth; // reflow
+  el.textContent = val;
+  el.classList.add('count-anim');
+}
+
+// ── CORE ANALYSIS — exact C++ logic in JS ──
+function runAnalysis() {
+  // Read array (mirrors: int arr[10] + cin loop)
+  const arr = [];
+  for (let i = 0; i < 10; i++) {
+    const raw = document.getElementById(`m${i}`).value.trim();
+    const num = Number(raw);
+    if (raw === '' || isNaN(num) || num < 0 || num > 100) {
+      document.getElementById('valError').classList.add('show');
+      document.getElementById(`m${i}`).focus();
+      return;
+    }
+    arr.push(num);
+  }
+  document.getElementById('valError').classList.remove('show');
+
+  // ── C++ loop: sum, max, min, countpass, countfail ──
+  let sum = 0;
+  let max = arr[0];
+  let min = arr[0];
+  let countpass = 0;
+  let countfail = 0;
+
+  for (let i = 0; i < 10; i++) {
+    sum = sum + arr[i];
+    if (arr[i] > max) max = arr[i];
+    if (arr[i] < min) min = arr[i];
+    if (arr[i] >= 50) countpass += 1;
+    else countfail += 1;
+  }
+
+  const avg = Math.floor(sum / 10); // int avg = sum/10
+
+  // ── C++ second loop: above average ──
+  const aboveAvg = [];
+  for (let i = 0; i < 10; i++) {
+    if (arr[i] > avg) aboveAvg.push({ roll: i + 1, score: arr[i] });
+  }
+
+  // ── Update widgets ──
+  setMetric('maxVal', max);
+  setMetric('minVal', min);
+  setMetric('avgVal', avg);
+  setMetric('passVal', countpass);
+  setMetric('failVal', countfail);
+
+  document.getElementById('maxSub').textContent = `Highest score in batch of 10`;
+  document.getElementById('minSub').textContent = `Lowest score in batch of 10`;
+  document.getElementById('avgSub').textContent = `Σ${sum} ÷ 10 = ${avg} (integer)`;
+
+  // Progress bars
+  document.getElementById('passBar').style.width = `${(countpass / 10) * 100}%`;
+  document.getElementById('failBar').style.width = `${(countfail / 10) * 100}%`;
+
+  // Sum bar
+  document.getElementById('sumStat').innerHTML = `Σ Sum: <span>${sum}</span>`;
+
+  // Above average badges
+  const aboveGrid = document.getElementById('aboveGrid');
+  document.getElementById('aboveCountBadge').textContent =
+    `${aboveAvg.length} student${aboveAvg.length !== 1 ? 's' : ''}`;
+
+  if (aboveAvg.length === 0) {
+    aboveGrid.innerHTML = '<div class="above-empty">// No students exceeded the class average.</div>';
+    return;
+  }
+
+  aboveGrid.innerHTML = aboveAvg.map((s, idx) => `
+    <div class="above-badge" style="animation-delay:${idx * 0.07}s">
+      <span class="badge-roll">R${String(s.roll).padStart(2,'0')}</span>
+      Student ${String(s.roll).padStart(2,'0')}
+      <span class="badge-score">${s.score}</span>
+      <span class="badge-arrow">▲</span>
+    </div>
+  `).join('');
+}
+</script>
+</body>
+</html>

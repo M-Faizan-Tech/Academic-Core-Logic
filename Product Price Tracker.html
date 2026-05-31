@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Product Price Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:        #07090f;
+    --surface:   #0d1120;
+    --card:      #111827;
+    --border:    #1e2d45;
+    --teal:      #0ff4c6;
+    --teal-dim:  #0bba95;
+    --blue:      #3b8bff;
+    --red:       #ff4d6d;
+    --green:     #00e5a0;
+    --yellow:    #ffd460;
+    --text:      #e2eaf5;
+    --muted:     #5e7490;
+    --mono:      'Space Mono', monospace;
+    --sans:      'DM Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── GRID BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(11,186,149,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(11,186,149,.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── GLOW ORBS ── */
+  .orb {
+    position: fixed; border-radius: 50%;
+    pointer-events: none; z-index: 0; filter: blur(120px); opacity: .3;
+  }
+  .orb-1 { width:500px;height:500px; background:var(--teal);   top:-180px; left:-120px; }
+  .orb-2 { width:400px;height:400px; background:var(--blue);   bottom:-100px; right:-80px; }
+
+  /* ── WRAPPER ── */
+  .wrap { position:relative; z-index:1; max-width:1180px; margin:auto; padding:0 24px 80px; }
+
+  /* ── HEADER ── */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 36px 0 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 36px;
+  }
+  .logo { display:flex; align-items:center; gap:14px; }
+  .logo-icon {
+    width:42px; height:42px; border-radius:12px;
+    background: linear-gradient(135deg, var(--teal), var(--blue));
+    display:grid; place-items:center; font-size:20px;
+  }
+  .logo-text { font-family:var(--mono); font-size:18px; font-weight:700; letter-spacing:-.5px; }
+  .logo-text span { color:var(--teal); }
+  .header-badge {
+    font-family:var(--mono); font-size:11px; color:var(--muted);
+    border:1px solid var(--border); border-radius:999px;
+    padding:4px 14px; letter-spacing:.5px; text-transform:uppercase;
+  }
+
+  /* ── ANALYTICS CARDS ── */
+  .analytics { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-bottom:36px; }
+  .acard {
+    background:var(--card); border:1px solid var(--border); border-radius:18px;
+    padding:24px 26px; position:relative; overflow:hidden;
+    transition: transform .2s, border-color .2s;
+  }
+  .acard:hover { transform:translateY(-3px); border-color:var(--teal-dim); }
+  .acard::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    border-radius:18px 18px 0 0;
+  }
+  .acard.cheap::before  { background:var(--green); }
+  .acard.xpens::before  { background:var(--red); }
+  .acard.avg::before    { background:var(--blue); }
+  .acard-label {
+    font-family:var(--mono); font-size:10px; text-transform:uppercase;
+    letter-spacing:1.5px; color:var(--muted); margin-bottom:14px;
+  }
+  .acard-name { font-size:17px; font-weight:600; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .acard-price { font-family:var(--mono); font-size:28px; font-weight:700; }
+  .acard.cheap  .acard-price { color:var(--green); }
+  .acard.xpens  .acard-price { color:var(--red); }
+  .acard.avg    .acard-price { color:var(--blue); }
+  .acard-icon { position:absolute; right:22px; top:22px; font-size:24px; opacity:.25; }
+  .empty-hint { color:var(--muted); font-size:13px; font-style:italic; }
+
+  /* ── INPUT SECTION ── */
+  .input-section {
+    background:var(--card); border:1px solid var(--border); border-radius:18px;
+    padding:28px 30px; margin-bottom:36px;
+  }
+  .section-title {
+    font-family:var(--mono); font-size:13px; text-transform:uppercase;
+    letter-spacing:1.5px; color:var(--teal); margin-bottom:22px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .section-title::after {
+    content:''; flex:1; height:1px; background:var(--border);
+  }
+  .input-row { display:grid; grid-template-columns:1fr 1fr auto; gap:14px; align-items:end; margin-bottom:16px; }
+  .field label {
+    display:block; font-size:11px; text-transform:uppercase; letter-spacing:1px;
+    color:var(--muted); margin-bottom:8px; font-family:var(--mono);
+  }
+  input[type=text], input[type=number] {
+    width:100%; background:var(--surface); border:1px solid var(--border);
+    border-radius:10px; padding:12px 16px; color:var(--text);
+    font-family:var(--sans); font-size:14px; outline:none;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  input[type=text]:focus, input[type=number]:focus {
+    border-color:var(--teal); box-shadow:0 0 0 3px rgba(15,244,198,.1);
+  }
+  .btn {
+    display:inline-flex; align-items:center; gap:8px;
+    padding:12px 22px; border-radius:10px; border:none;
+    font-family:var(--sans); font-size:14px; font-weight:600;
+    cursor:pointer; transition:all .2s; white-space:nowrap;
+  }
+  .btn-primary { background:var(--teal); color:#07090f; }
+  .btn-primary:hover { background:var(--teal-dim); transform:translateY(-1px); box-shadow:0 8px 24px rgba(15,244,198,.25); }
+  .btn-outline { background:transparent; color:var(--teal); border:1.5px solid var(--teal); }
+  .btn-outline:hover { background:rgba(15,244,198,.08); }
+  .btn-danger { background:transparent; color:var(--red); border:1.5px solid var(--red); }
+  .btn-danger:hover { background:rgba(255,77,109,.08); }
+  .btn:disabled { opacity:.4; cursor:not-allowed; transform:none !important; }
+
+  .input-footer { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+  .progress-bar-wrap { flex:1; min-width:200px; }
+  .progress-label { font-size:12px; color:var(--muted); margin-bottom:6px; font-family:var(--mono); }
+  .progress-bar { height:6px; background:var(--surface); border-radius:99px; overflow:hidden; }
+  .progress-fill {
+    height:100%; border-radius:99px;
+    background: linear-gradient(90deg, var(--teal), var(--blue));
+    transition: width .35s cubic-bezier(.4,0,.2,1);
+  }
+  .btn-row { display:flex; gap:10px; flex-wrap:wrap; }
+
+  /* ── TABS ── */
+  .tabs-header {
+    display:flex; gap:4px; margin-bottom:0;
+    background:var(--card); border:1px solid var(--border);
+    border-radius:14px 14px 0 0; padding:8px;
+  }
+  .tab-btn {
+    padding:10px 22px; border-radius:10px; border:none;
+    background:transparent; color:var(--muted);
+    font-family:var(--sans); font-size:14px; font-weight:500;
+    cursor:pointer; transition:all .2s;
+  }
+  .tab-btn.active { background:var(--teal); color:#07090f; font-weight:700; }
+  .tab-btn:not(.active):hover { color:var(--text); background:var(--surface); }
+  .tabs-body {
+    background:var(--card); border:1px solid var(--border); border-top:none;
+    border-radius:0 0 18px 18px; padding:28px;
+  }
+  .tab-panel { display:none; animation: fadeIn .25s; }
+  .tab-panel.active { display:block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+
+  /* ── TABLE ── */
+  .table-controls { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; flex-wrap:wrap; gap:12px; }
+  .count-badge {
+    font-family:var(--mono); font-size:12px; color:var(--muted);
+    background:var(--surface); border:1px solid var(--border);
+    padding:5px 14px; border-radius:99px;
+  }
+  table { width:100%; border-collapse:collapse; }
+  th {
+    font-family:var(--mono); font-size:10px; text-transform:uppercase;
+    letter-spacing:1.5px; color:var(--muted);
+    padding:10px 16px; text-align:left;
+    border-bottom:1px solid var(--border);
+  }
+  td { padding:14px 16px; font-size:14px; border-bottom:1px solid rgba(30,45,69,.5); }
+  tr:last-child td { border-bottom:none; }
+  tbody tr { transition:background .15s; }
+  tbody tr:hover td { background:rgba(15,244,198,.03); }
+  .rank { font-family:var(--mono); color:var(--muted); font-size:12px; }
+  .name-cell { font-weight:500; }
+  .price-cell { font-family:var(--mono); font-weight:700; }
+  .tag {
+    display:inline-block; font-size:11px; font-family:var(--mono);
+    padding:2px 10px; border-radius:99px; font-weight:700;
+  }
+  .tag-green { background:rgba(0,229,160,.15); color:var(--green); }
+  .tag-red   { background:rgba(255,77,109,.15); color:var(--red);   }
+  .tag-blue  { background:rgba(59,139,255,.15);  color:var(--blue);  }
+  .empty-row td { text-align:center; color:var(--muted); padding:40px; font-size:13px; font-style:italic; }
+
+  /* Bubble sort animation */
+  @keyframes swapFlash {
+    0%   { background:rgba(15,244,198,.18); }
+    100% { background:transparent; }
+  }
+  .swap-anim td { animation: swapFlash .45s ease; }
+
+  /* ── RANGE FILTER ── */
+  .range-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+  .range-hint { font-size:12px; color:var(--muted); margin-top:-10px; margin-bottom:16px; font-family:var(--mono); }
+
+  /* ── SEARCH ── */
+  .search-toggle { display:flex; gap:8px; margin-bottom:18px; }
+  .toggle-btn {
+    padding:8px 18px; border-radius:8px; border:1.5px solid var(--border);
+    background:transparent; color:var(--muted);
+    font-family:var(--sans); font-size:13px; font-weight:500; cursor:pointer;
+    transition:all .18s;
+  }
+  .toggle-btn.active { border-color:var(--teal); color:var(--teal); background:rgba(15,244,198,.07); }
+  .search-box { position:relative; margin-bottom:20px; }
+  .search-box input { padding-left:44px; }
+  .search-icon { position:absolute; left:15px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:16px; pointer-events:none; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background:var(--surface); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  /* ── TOAST ── */
+  .toast {
+    position:fixed; bottom:32px; right:32px; z-index:999;
+    background:var(--teal); color:#07090f;
+    font-family:var(--mono); font-size:13px; font-weight:700;
+    padding:12px 22px; border-radius:12px;
+    box-shadow:0 12px 40px rgba(15,244,198,.35);
+    transform:translateY(80px); opacity:0;
+    transition:all .35s cubic-bezier(.4,0,.2,1);
+  }
+  .toast.show { transform:none; opacity:1; }
+
+  @media(max-width:720px){
+    .analytics { grid-template-columns:1fr; }
+    .input-row { grid-template-columns:1fr 1fr; }
+    .input-row .btn { grid-column:span 2; }
+    .range-row { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="toast" id="toast"></div>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">📦</div>
+      <div class="logo-text">Price<span>Track</span></div>
+    </div>
+    <div class="header-badge">Dashboard v1.0</div>
+  </header>
+
+  <!-- ANALYTICS CARDS -->
+  <div class="analytics">
+    <div class="acard cheap">
+      <div class="acard-icon">🟢</div>
+      <div class="acard-label">Cheapest Product</div>
+      <div class="acard-name" id="cheap-name"><span class="empty-hint">No data yet</span></div>
+      <div class="acard-price" id="cheap-price">—</div>
+    </div>
+    <div class="acard xpens">
+      <div class="acard-icon">🔴</div>
+      <div class="acard-label">Most Expensive</div>
+      <div class="acard-name" id="xpens-name"><span class="empty-hint">No data yet</span></div>
+      <div class="acard-price" id="xpens-price">—</div>
+    </div>
+    <div class="acard avg">
+      <div class="acard-icon">📊</div>
+      <div class="acard-label">Average Price</div>
+      <div class="acard-name" id="avg-label"><span class="empty-hint">—</span></div>
+      <div class="acard-price" id="avg-price">—</div>
+    </div>
+  </div>
+
+  <!-- INPUT SECTION -->
+  <div class="input-section">
+    <div class="section-title">➕ Add Products</div>
+    <div class="input-row">
+      <div class="field">
+        <label>Product Name</label>
+        <input type="text" id="inp-name" placeholder="e.g. Laptop" maxlength="30"/>
+      </div>
+      <div class="field">
+        <label>Price ($)</label>
+        <input type="number" id="inp-price" placeholder="e.g. 999" min="0"/>
+      </div>
+      <button class="btn btn-primary" id="btn-add" onclick="addProduct()">Add ↵</button>
+    </div>
+    <div class="input-footer">
+      <div class="progress-bar-wrap">
+        <div class="progress-label" id="prog-label">0 / 15 products added</div>
+        <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="autoGenerate()">⚡ Auto-Generate 15</button>
+        <button class="btn btn-danger" onclick="clearAll()">🗑 Clear All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs-header">
+    <button class="tab-btn active" onclick="switchTab('table',this)">📋 Table &amp; Sort</button>
+    <button class="tab-btn" onclick="switchTab('range',this)">🎯 Range Filter</button>
+    <button class="tab-btn" onclick="switchTab('search',this)">🔍 Smart Search</button>
+  </div>
+  <div class="tabs-body">
+
+    <!-- TAB 1: TABLE -->
+    <div class="tab-panel active" id="tab-table">
+      <div class="table-controls">
+        <span class="count-badge" id="table-count">0 products</span>
+        <button class="btn btn-primary" onclick="bubbleSortAnimated()">⬆ Sort by Price</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table id="main-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Product Name</th>
+              <th>Price</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: RANGE FILTER -->
+    <div class="tab-panel" id="tab-range">
+      <div class="range-row">
+        <div class="field">
+          <label>Min Price ($)</label>
+          <input type="number" id="range-min" placeholder="0" min="0" oninput="renderRange()"/>
+        </div>
+        <div class="field">
+          <label>Max Price ($)</label>
+          <input type="number" id="range-max" placeholder="99999" min="0" oninput="renderRange()"/>
+        </div>
+      </div>
+      <p class="range-hint" id="range-hint">Enter a price range to filter products.</p>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Product Name</th><th>Price</th></tr>
+          </thead>
+          <tbody id="range-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: SEARCH -->
+    <div class="tab-panel" id="tab-search">
+      <div class="search-toggle">
+        <button class="toggle-btn active" id="tog-name" onclick="setSearchMode('name')">🔤 By Name</button>
+        <button class="toggle-btn" id="tog-price" onclick="setSearchMode('price')">💲 By Price Limit</button>
+      </div>
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-inp" placeholder="Start typing…" oninput="renderSearch()"/>
+      </div>
+      <p class="range-hint" id="search-hint">Showing all products. Start typing to filter.</p>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Product Name</th><th>Price</th></tr>
+          </thead>
+          <tbody id="search-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /tabs-body -->
+</div><!-- /wrap -->
+
+<script>
+// ── STATE (mirrors C++ arrays) ──
+let products = [];   // product[] array
+let prices   = [];   // productprice[] array
+const MAX = 15;
+let searchMode = 'name';
+let isSorting  = false;
+
+// ── DUMMY DATA ──
+const DUMMY_PRODUCTS = [
+  ['Laptop',       1299], ['Smartphone',   899], ['Headphones',   199],
+  ['Keyboard',      89],  ['Monitor',      449], ['Mouse',         49],
+  ['Webcam',        79],  ['USB Hub',       35], ['SSD Drive',    129],
+  ['Tablet',       599],  ['Smartwatch',   299], ['Speaker',      159],
+  ['Microphone',   109],  ['Desk Lamp',     45], ['Cable Pack',    19]
+];
+
+// ── ADD PRODUCT ──
+function addProduct() {
+  if (products.length >= MAX) { toast('Maximum 15 products reached!'); return; }
+  const name  = document.getElementById('inp-name').value.trim();
+  const price = parseFloat(document.getElementById('inp-price').value);
+  if (!name)        { toast('Please enter a product name.'); return; }
+  if (isNaN(price) || price < 0) { toast('Please enter a valid price.'); return; }
+  products.push(name);
+  prices.push(price);
+  document.getElementById('inp-name').value  = '';
+  document.getElementById('inp-price').value = '';
+  document.getElementById('inp-name').focus();
+  updateAll();
+  toast(`"${name}" added (${products.length}/${MAX})`);
+}
+
+// ── AUTO GENERATE ──
+function autoGenerate() {
+  products = DUMMY_PRODUCTS.map(d => d[0]);
+  prices   = DUMMY_PRODUCTS.map(d => d[1]);
+  updateAll();
+  toast('15 demo products loaded!');
+}
+
+// ── CLEAR ALL ──
+function clearAll() {
+  if (products.length === 0) { toast('Nothing to clear.'); return; }
+  products = []; prices = [];
+  updateAll();
+  toast('All products cleared.');
+}
+
+// ── UPDATE EVERYTHING ──
+function updateAll() {
+  updateProgress();
+  updateAnalytics();
+  renderTable();
+  renderRange();
+  renderSearch();
+}
+
+// ── PROGRESS BAR ──
+function updateProgress() {
+  const n = products.length;
+  document.getElementById('prog-label').textContent = `${n} / ${MAX} products added`;
+  document.getElementById('prog-fill').style.width  = `${(n / MAX) * 100}%`;
+  document.getElementById('btn-add').disabled = (n >= MAX);
+}
+
+// ── ANALYTICS (mirrors C++ min/max/avg logic) ──
+function updateAnalytics() {
+  if (prices.length === 0) {
+    ['cheap-name','xpens-name'].forEach(id =>
+      document.getElementById(id).innerHTML = '<span class="empty-hint">No data yet</span>'
+    );
+    document.getElementById('avg-label').innerHTML = '<span class="empty-hint">—</span>';
+    ['cheap-price','xpens-price','avg-price'].forEach(id =>
+      document.getElementById(id).textContent = '—'
+    );
+    return;
+  }
+  let minVal = Infinity, maxVal = -Infinity, m1 = 0, m2 = 0, sum = 0;
+  for (let i = 0; i < prices.length; i++) {
+    if (prices[i] < minVal) { minVal = prices[i]; m1 = i; }
+    if (prices[i] > maxVal) { maxVal = prices[i]; m2 = i; }
+    sum += prices[i];
+  }
+  const avg = sum / prices.length;
+  document.getElementById('cheap-name').textContent  = products[m1];
+  document.getElementById('cheap-price').textContent = fmt(minVal);
+  document.getElementById('xpens-name').textContent  = products[m2];
+  document.getElementById('xpens-price').textContent = fmt(maxVal);
+  document.getElementById('avg-label').textContent   = `across ${prices.length} items`;
+  document.getElementById('avg-price').textContent   = fmt(avg);
+}
+
+// ── RENDER TABLE ──
+function renderTable() {
+  const tbody = document.getElementById('table-body');
+  document.getElementById('table-count').textContent = `${products.length} products`;
+  if (products.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No products added yet. Use the form above!</td></tr>';
+    return;
+  }
+  const minP = Math.min(...prices), maxP = Math.max(...prices);
+  tbody.innerHTML = products.map((p, i) => {
+    let tag = '';
+    if (prices[i] === minP) tag = '<span class="tag tag-green">Cheapest</span>';
+    else if (prices[i] === maxP) tag = '<span class="tag tag-red">Priciest</span>';
+    else tag = '<span class="tag tag-blue">Normal</span>';
+    return `<tr>
+      <td class="rank">${String(i+1).padStart(2,'0')}</td>
+      <td class="name-cell">${esc(p)}</td>
+      <td class="price-cell">${fmt(prices[i])}</td>
+      <td>${tag}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── BUBBLE SORT (exact C++ logic, animated) ──
+async function bubbleSortAnimated() {
+  if (isSorting) return;
+  if (products.length < 2) { toast('Need at least 2 products to sort!'); return; }
+  isSorting = true;
+  const rows = () => document.getElementById('table-body').rows;
+
+  for (let i = 0; i < products.length; i++) {
+    for (let j = 0; j < products.length - 1; j++) {
+      if (prices[j] > prices[j + 1]) {
+        // swap prices array
+        [prices[j], prices[j+1]] = [prices[j+1], prices[j]];
+        // swap products array
+        [products[j], products[j+1]] = [products[j+1], products[j]];
+        // re-render for animation
+        renderTable();
+        const r = rows();
+        if (r[j])   r[j].classList.add('swap-anim');
+        if (r[j+1]) r[j+1].classList.add('swap-anim');
+        await sleep(120);
+      }
+    }
+  }
+  renderTable();
+  updateAnalytics();
+  renderRange();
+  renderSearch();
+  isSorting = false;
+  toast('Sorted by price (ascending)!');
+}
+
+// ── RANGE FILTER (mirrors C++ range logic) ──
+function renderRange() {
+  const minV = parseFloat(document.getElementById('range-min').value);
+  const maxV = parseFloat(document.getElementById('range-max').value);
+  const tbody = document.getElementById('range-body');
+  const hint  = document.getElementById('range-hint');
+
+  if (!products.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="3">No products to filter.</td></tr>';
+    hint.textContent = 'Add products first.';
+    return;
+  }
+  if (isNaN(minV) && isNaN(maxV)) {
+    // no range set — show all
+    tbody.innerHTML = products.map((p,i) =>
+      `<tr><td class="rank">${i+1}</td><td class="name-cell">${esc(p)}</td><td class="price-cell">${fmt(prices[i])}</td></tr>`
+    ).join('');
+    hint.textContent = 'Showing all products. Enter a range to filter.';
+    return;
+  }
+  const lo = isNaN(minV) ? -Infinity : minV;
+  const hi = isNaN(maxV) ?  Infinity : maxV;
+  const filtered = products.reduce((acc, p, i) => {
+    if (prices[i] >= lo && prices[i] <= hi) acc.push({p, price: prices[i], idx: i});
+    return acc;
+  }, []);
+  tbody.innerHTML = filtered.length
+    ? filtered.map((x,k) =>
+        `<tr><td class="rank">${k+1}</td><td class="name-cell">${esc(x.p)}</td><td class="price-cell">${fmt(x.price)}</td></tr>`
+      ).join('')
+    : '<tr class="empty-row"><td colspan="3">No products in this price range.</td></tr>';
+  hint.textContent = `${filtered.length} product(s) between ${isNaN(minV)?'$0':fmt(minV)} and ${isNaN(maxV)?'∞':fmt(maxV)}`;
+}
+
+// ── SEARCH MODE TOGGLE ──
+function setSearchMode(mode) {
+  searchMode = mode;
+  document.getElementById('tog-name').classList.toggle('active',  mode === 'name');
+  document.getElementById('tog-price').classList.toggle('active', mode === 'price');
+  document.getElementById('search-inp').value = '';
+  document.getElementById('search-inp').placeholder = mode === 'name' ? 'Type product name…' : 'Enter max price limit…';
+  renderSearch();
+}
+
+// ── SMART SEARCH (mirrors C++ search logic) ──
+function renderSearch() {
+  const val   = document.getElementById('search-inp').value.trim();
+  const tbody = document.getElementById('search-body');
+  const hint  = document.getElementById('search-hint');
+
+  if (!products.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="3">No products to search.</td></tr>';
+    hint.textContent = 'Add products first.';
+    return;
+  }
+
+  let results = [];
+  if (searchMode === 'name') {
+    const q = val.toLowerCase();
+    results = q
+      ? products.reduce((a, p, i) => { if (p.toLowerCase().includes(q)) a.push({p, price:prices[i]}); return a; }, [])
+      : products.map((p, i) => ({p, price: prices[i]}));
+    hint.textContent = q
+      ? `${results.length} match(es) for "${val}"`
+      : 'Showing all products. Type to filter by name.';
+  } else {
+    const limit = parseFloat(val);
+    results = isNaN(limit)
+      ? products.map((p, i) => ({p, price: prices[i]}))
+      : products.reduce((a, p, i) => { if (prices[i] < limit) a.push({p, price:prices[i]}); return a; }, []);
+    hint.textContent = isNaN(limit)
+      ? 'Showing all products. Enter a price limit.'
+      : `${results.length} product(s) under ${fmt(limit)}`;
+  }
+
+  tbody.innerHTML = results.length
+    ? results.map((x, k) =>
+        `<tr><td class="rank">${k+1}</td><td class="name-cell">${esc(x.p)}</td><td class="price-cell">${fmt(x.price)}</td></tr>`
+      ).join('')
+    : '<tr class="empty-row"><td colspan="3">No matching products found.</td></tr>';
+}
+
+// ── TAB SWITCHER ──
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── HELPERS ──
+function fmt(n)  { return '$' + parseFloat(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+function esc(s)  { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+// Enter key support
+document.getElementById('inp-price').addEventListener('keydown', e => { if (e.key === 'Enter') addProduct(); });
+document.getElementById('inp-name').addEventListener('keydown',  e => { if (e.key === 'Enter') document.getElementById('inp-price').focus(); });
+
+// Init
+updateAll();
+</script>
+</body>
+</html>
