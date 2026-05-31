@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Muhammad Faizan — IT Portfolio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <style>
+    /* ── RESET & BASE ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #080c18;
+      --surface:   rgba(255,255,255,0.045);
+      --border:    rgba(255,255,255,0.08);
+      --border-h:  rgba(255,255,255,0.18);
+      --text:      #e8eaf0;
+      --muted:     #7a8399;
+      --accent1:   #4ff8c0;   /* mint teal */
+      --accent2:   #a78bfa;   /* violet */
+      --accent3:   #38bdf8;   /* sky */
+      --accent4:   #f472b6;   /* pink */
+      --accent5:   #fb923c;   /* amber */
+      --accent6:   #34d399;   /* emerald */
+      --accent7:   #f43f5e;   /* rose red */
+      --glow1:     rgba(79,248,192,.18);
+      --glow2:     rgba(167,139,250,.18);
+      --glow3:     rgba(56,189,248,.18);
+      --radius:    18px;
+      --font-head: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.65;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── AURORA BACKGROUND ── */
+    .aurora {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .aurora-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0;
+      animation: drift 18s ease-in-out infinite;
+    }
+    .aurora-orb:nth-child(1) { width: 560px; height: 560px; background: radial-gradient(circle, rgba(79,248,192,.28) 0%, transparent 70%); top: -100px; left: -120px; animation-delay: 0s;   animation-duration: 20s; }
+    .aurora-orb:nth-child(2) { width: 480px; height: 480px; background: radial-gradient(circle, rgba(167,139,250,.26) 0%, transparent 70%); top: 40%;  right: -80px;  animation-delay: -6s;  animation-duration: 22s; }
+    .aurora-orb:nth-child(3) { width: 400px; height: 400px; background: radial-gradient(circle, rgba(56,189,248,.22) 0%, transparent 70%);  bottom: 5%; left: 30%;  animation-delay: -11s; animation-duration: 25s; }
+    .aurora-orb:nth-child(4) { width: 320px; height: 320px; background: radial-gradient(circle, rgba(244,114,182,.18) 0%, transparent 70%); top: 55%; left: 10%;  animation-delay: -4s;  animation-duration: 19s; }
+    .aurora-orb:nth-child(5) { width: 260px; height: 260px; background: radial-gradient(circle, rgba(251,146,60,.16)  0%, transparent 70%); top: 20%; left: 55%;  animation-delay: -14s; animation-duration: 23s; }
+
+    @keyframes drift {
+      0%   { opacity: 0;    transform: translate(0,0)     scale(1); }
+      10%  { opacity: 1; }
+      50%  { transform: translate(40px, 60px) scale(1.12); }
+      90%  { opacity: 1; }
+      100% { opacity: 0;    transform: translate(0,0)     scale(1); }
+    }
+
+    .aurora::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 20% 15%, rgba(255,255,255,.35) 0%, transparent 100%),
+        radial-gradient(1px 1px at 65% 30%, rgba(255,255,255,.25) 0%, transparent 100%),
+        radial-gradient(1px 1px at 45% 70%, rgba(255,255,255,.20) 0%, transparent 100%),
+        radial-gradient(1px 1px at 80% 55%, rgba(255,255,255,.30) 0%, transparent 100%),
+        radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,.18) 0%, transparent 100%);
+    }
+
+    /* ── LAYOUT ── */
+    .page { position: relative; z-index: 1; }
+    .container { max-width: 1180px; margin: 0 auto; padding: 0 28px; }
+
+    /* ── HEADER ── */
+    header { padding: 72px 0 60px; text-align: center; }
+
+    .badge-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      border-radius: 100px;
+      padding: 6px 16px 6px 10px;
+      margin-bottom: 32px;
+      transition: border-color .3s;
+    }
+    .badge-wrap:hover { border-color: var(--border-h); }
+    .badge-dot {
+      width: 8px; height: 8px;
+      background: var(--accent1);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent1);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: .6; transform: scale(1.3); }
+    }
+    .badge-wrap a {
+      color: var(--accent1);
+      text-decoration: none;
+      font-family: var(--font-head);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .04em;
+    }
+
+    h1 {
+      font-family: var(--font-head);
+      font-size: clamp(2.1rem, 5vw, 3.5rem);
+      font-weight: 800;
+      line-height: 1.12;
+      letter-spacing: -.02em;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #ffffff 0%, var(--accent1) 45%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: title-in .8s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes title-in {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .subtitle {
+      max-width: 660px;
+      margin: 0 auto 40px;
+      color: var(--muted);
+      font-size: 16px;
+      font-weight: 300;
+      line-height: 1.75;
+      animation: title-in .8s .15s cubic-bezier(.22,1,.36,1) both;
+    }
+
+    .stats-bar {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      animation: title-in .8s .28s cubic-bezier(.22,1,.36,1) both;
+    }
+    .stat-chip {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+      border-radius: 100px;
+      padding: 7px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      transition: all .3s;
+    }
+    .stat-chip:hover { border-color: var(--border-h); color: var(--text); }
+    .stat-chip span { color: var(--text); font-weight: 600; }
+
+    /* ── DIVIDER ── */
+    .divider { display: flex; align-items: center; gap: 16px; margin: 8px 0 52px; }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+    }
+    .divider-label {
+      font-family: var(--font-head); font-size: 11px; font-weight: 700;
+      letter-spacing: .18em; text-transform: uppercase; color: var(--muted);
+    }
+
+    /* ── PROJECT GRID ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 80px;
+    }
+    @media (max-width: 960px) { .grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+
+    /* ── PROJECT CARD ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+      border-radius: var(--radius);
+      padding: 28px 26px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+      overflow: hidden;
+      transition: transform .35s cubic-bezier(.22,1,.36,1), border-color .35s, box-shadow .35s;
+      animation: card-in .6s var(--cd, 0s) cubic-bezier(.22,1,.36,1) both;
+    }
+    .card:nth-child(1) { --cd: .05s; }
+    .card:nth-child(2) { --cd: .12s; }
+    .card:nth-child(3) { --cd: .19s; }
+    .card:nth-child(4) { --cd: .26s; }
+    .card:nth-child(5) { --cd: .33s; }
+    .card:nth-child(6) { --cd: .40s; }
+    .card:nth-child(7) { --cd: .47s; }
+    @keyframes card-in {
+      from { opacity: 0; transform: translateY(32px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: var(--c-accent, var(--accent1)); border-radius: var(--radius) var(--radius) 0 0;
+      opacity: .7; transition: opacity .3s;
+    }
+    .card::after {
+      content: ''; position: absolute; inset: 0; border-radius: var(--radius);
+      background: radial-gradient(ellipse 70% 50% at 50% 0%, var(--c-glow, var(--glow1)) 0%, transparent 70%);
+      opacity: 0; transition: opacity .4s; pointer-events: none;
+    }
+    .card:hover { transform: translateY(-7px) scale(1.01); border-color: var(--border-h); box-shadow: 0 24px 64px rgba(0,0,0,.4); }
+    .card:hover::after { opacity: 1; }
+    .card:hover::before { opacity: 1; }
+
+    .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .card-icon {
+      width: 46px; height: 46px; border-radius: 12px;
+      background: rgba(255,255,255,.06); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
+    }
+    .micro-badge {
+      font-size: 10.5px; font-weight: 700; font-family: var(--font-head);
+      letter-spacing: .08em; text-transform: uppercase; color: var(--c-accent, var(--accent1));
+      background: rgba(255,255,255,.05); border: 1px solid var(--c-accent, var(--accent1));
+      border-radius: 100px; padding: 3px 10px; white-space: nowrap; opacity: .9;
+    }
+
+    .card-title { font-family: var(--font-head); font-size: 17.5px; font-weight: 700; letter-spacing: -.01em; color: #f0f2f8; line-height: 1.3; }
+    .card-desc { font-size: 13.5px; color: var(--muted); flex: 1; line-height: 1.65; }
+
+    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag { font-size: 11px; font-weight: 500; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.09); border-radius: 6px; padding: 3px 8px; color: #8a94b0; }
+
+    .btn-launch {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px 18px; border: none; border-radius: 11px;
+      background: var(--c-accent, var(--accent1)); color: #070c16; font-family: var(--font-head); font-size: 13.5px; font-weight: 700;
+      letter-spacing: .04em; text-decoration: none; cursor: pointer; transition: transform .25s, box-shadow .25s, filter .25s;
+      box-shadow: 0 0 20px var(--c-glow, var(--glow1)); margin-top: auto;
+    }
+    .btn-launch:hover { transform: translateY(-2px); filter: brightness(1.12); box-shadow: 0 0 36px var(--c-glow, var(--glow1)); }
+    .btn-launch:active { transform: translateY(0); filter: brightness(.95); }
+
+    /* ── FOOTER ── */
+    footer { border-top: 1px solid var(--border); padding: 40px 0 44px; text-align: center; }
+    .footer-brand {
+      font-family: var(--font-head); font-size: 14px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+      background: linear-gradient(90deg, var(--accent1), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 10px;
+    }
+    .footer-note { font-size: 13px; color: var(--muted); line-height: 1.8; }
+    .footer-note a { color: var(--accent3); text-decoration: none; }
+    .footer-note a:hover { text-decoration: underline; }
+    .footer-mit {
+      display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; font-size: 12px; font-weight: 600; color: var(--muted);
+      background: var(--surface); border: 1px solid var(--border); backdrop-filter: blur(10px); border-radius: 100px; padding: 5px 14px;
+    }
+    .footer-mit::before { content: '⚖️'; font-size: 13px; }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.2); }
+  </style>
+</head>
+<body>
+
+<div class="aurora" aria-hidden="true">
+  <div class="aurora-orb"></div>
+  <div class="aurora-orb"></div>
+  <div class="aurora-orb"></div>
+  <div class="aurora-orb"></div>
+  <div class="aurora-orb"></div>
+</div>
+
+<div class="page">
+  <div class="container">
+
+    <header>
+      <div class="badge-wrap">
+        <div class="badge-dot"></div>
+        <a href="https://github.com/M-Faizan-Tech" target="_blank" rel="noopener">@M-Faizan-Tech</a>
+      </div>
+
+      <h1>Muhammad Faizan<br>Information Technology Portfolio</h1>
+
+      <p class="subtitle">
+        Showcasing foundational core programming algorithms transformed into
+        interactive, responsive modern web applications.
+      </p>
+
+      <div class="stats-bar">
+        <div class="stat-chip">🧩 <span>7</span> Projects</div>
+        <div class="stat-chip">⚙️ Core <span>Logic Flow</span></div>
+        <div class="stat-chip">🌐 <span>HTML5</span> &amp; <span>CSS3</span></div>
+        <div class="stat-chip">📂 <span>Open Source</span> MIT</div>
+      </div>
+    </header>
+
+    <div class="divider">
+      <span class="divider-label">Interactive IT Projects</span>
+    </div>
+
+    <div class="grid">
+
+      <div class="card" style="--c-accent:var(--accent1);--c-glow:var(--glow1);">
+        <div class="card-top">
+          <div class="card-icon">🎮</div>
+          <span class="micro-badge">Neon Cyberpunk</span>
+        </div>
+        <div class="card-title">Tic-Tac-Toe Live Analyzer</div>
+        <p class="card-desc">A fully interactive two-player Tic-Tac-Toe game with real-time win detection and animated board states.</p>
+        <div class="tag-row">
+          <span class="tag">2D Arrays</span>
+          <span class="tag">Win Logic</span>
+          <span class="tag">Turn Control</span>
+        </div>
+        <a href="tictactoe.html" class="btn-launch">Launch App ⚡</a>
+      </div>
+
+      <div class="card" style="--c-accent:var(--accent2);--c-glow:var(--glow2);">
+        <div class="card-top">
+          <div class="card-icon">📊</div>
+          <span class="micro-badge" style="color:var(--accent2);border-color:var(--accent2);">Minimalist Light</span>
+        </div>
+        <div class="card-title">Smart Grading Dashboard</div>
+        <p class="card-desc">Calculates GPA weightage, checks attendance thresholds, and assigns dynamic letter grades in real time.</p>
+        <div class="tag-row">
+          <span class="tag">Conditionals</span>
+          <span class="tag">Weightage Calc</span>
+          <span class="tag">Attendance Check</span>
+        </div>
+        <a href="grading-system.html" class="btn-launch" style="background:var(--accent2);">Launch App ⚡</a>
+      </div>
+
+      <div class="card" style="--c-accent:var(--accent3);--c-glow:var(--glow3);">
+        <div class="card-top">
+          <div class="card-icon">🧮</div>
+          <span class="micro-badge" style="color:var(--accent3);border-color:var(--accent3);">Retro Arcade</span>
+        </div>
+        <div class="card-title">Advanced Calculator</div>
+        <p class="card-desc">Arithmetic logic system featuring precise switch-case operators with strict zero-division and modulus validations.</p>
+        <div class="tag-row">
+          <span class="tag">Switch-Case</span>
+          <span class="tag">Error Handling</span>
+          <span class="tag">Typecasting</span>
+        </div>
+        <a href="retro-calculator.html" class="btn-launch" style="background:var(--accent3);">Launch App ⚡</a>
+      </div>
+
+      <div class="card" style="--c-accent:var(--accent4);--c-glow:rgba(244,114,182,.18);">
+        <div class="card-top">
+          <div class="card-icon">📋</div>
+          <span class="micro-badge" style="color:var(--accent4);border-color:var(--accent4);">Cyber Dashboard</span>
+        </div>
+        <div class="card-title">Exam Marks Manager</div>
+        <p class="card-desc">Processes multi-student score arrays to output class average, maximum/minimum metrics, and filters high achievers.</p>
+        <div class="tag-row">
+          <span class="tag">Arrays</span>
+          <span class="tag">Min-Max Track</span>
+          <span class="tag">Data Filters</span>
+        </div>
+        <a href="marks-dashboard.html" class="btn-launch" style="background:var(--accent4);">Launch App ⚡</a>
+      </div>
+
+      <div class="card" style="--c-accent:var(--accent5);--c-glow:rgba(251,146,60,.18);">
+        <div class="card-top">
+          <div class="card-icon">🔐</div>
+          <span class="micro-badge" style="color:var(--accent5);border-color:var(--accent5);">Security Tech</span>
+        </div>
+        <div class="card-title">Password Strength Analyzer</div>
+        <p class="card-desc">Evaluates string data through security algorithms checking for character length, casing, numbers, and special symbols.</p>
+        <div class="tag-row">
+          <span class="tag">String Parsing</span>
+          <span class="tag">Regex Logic</span>
+          <span class="tag">Validation Rules</span>
+        </div>
+        <a href="password-analyzer.html" class="btn-launch" style="background:var(--accent5);">Launch App ⚡</a>
+      </div>
+
+      <div class="card" style="--c-accent:var(--accent7);--c-glow:rgba(244,63,94,.18);">
+        <div class="card-top">
+          <div class="card-icon">🛍️</div>
+          <span class="micro-badge" style="color:var(--accent7);border-color:var(--accent7);">E-Commerce</span>
+        </div>
+        <div class="card-title">Product Price Tracker</div>
+        <p class="card-desc">Tracks store items, aggregates total costs, applies discounts dynamically, and displays sleek pricing structures.</p>
+        <div class="tag-row">
+          <span class="tag">Structures</span>
+          <span class="tag">Loops</span>
+          <span class="tag">Discount Logic</span>
+        </div>
+        <a href="product-tracker.html" class="btn-launch" style="background:var(--accent7);">Launch App ⚡</a>
+      </div>
+
+      <div class="card" style="--c-accent:var(--accent6);--c-glow:rgba(52,211,153,.18);">
+        <div class="card-top">
+          <div class="card-icon">🎓</div>
+          <span class="micro-badge" style="color:var(--accent6);border-color:var(--accent6);">Academic Hub</span>
+        </div>
+        <div class="card-title">University Course Registration</div>
+        <p class="card-desc">An interactive enrollment portal managing student credit hours, course choices, and real-time fee breakdowns.</p>
+        <div class="tag-row">
+          <span class="tag">Structures</span>
+          <span class="tag">Functions</span>
+          <span class="tag">Input Selection</span>
+        </div>
+        <a href="course-portal.html" class="btn-launch" style="background:var(--accent6);">Launch App ⚡</a>
+      </div>
+
+    </div><footer>
+      <div class="footer-brand">Academic Core Logic</div>
+      <p class="footer-note">
+        Powered by HTML5, CSS3, and JavaScript.<br>
+        Built &amp; maintained by <a href="https://github.com/M-Faizan-Tech" target="_blank" rel="noopener">Muhammad Faizan</a>
+        · Hosted on <a href="https://pages.github.com" target="_blank" rel="noopener">GitHub Pages</a>
+      </p>
+      <div><span class="footer-mit">Open Source under MIT License</span></div>
+    </footer>
+
+  </div></div></body>
+</html>
